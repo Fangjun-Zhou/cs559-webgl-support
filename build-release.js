@@ -15,7 +15,7 @@ const sharedConfig = {
   },
   plugins: [
     glsl({
-      minify: true,
+      minify: false,
     }),
   ],
 };
