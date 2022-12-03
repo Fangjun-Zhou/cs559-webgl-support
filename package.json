@@ -4,12 +4,17 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-editor": "node build-editor.js",
+    "build-release": "node build-release.js"
   },
   "author": "Fangjun Zhou",
   "license": "MIT",
   "dependencies": {
     "esbuild": "^0.15.16",
     "white-dwarf": "file:white-dwarf"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "esbuild-plugin-glsl": "^1.1.0"
   }
 }
