@@ -4963,16 +4963,16 @@
   ], TransformData3D);
 
   // white-dwarf/src/Core/Render/Shader/DefaultShader/default_vert.glsl
-  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat4 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec3 fColor;varying vec2 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
+  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(void){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
 
   // white-dwarf/src/Core/Render/Shader/DefaultShader/default_frag.glsl
-  var default_frag_default = "uniform mat4 uMV;uniform mat4 uP;uniform mat4 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec3 fColor;varying vec2 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=vec4(fColor,1.0);}";
+  var default_frag_default = "precision highp float;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=fColor;}";
 
   // white-dwarf/src/Core/Render/Material.ts
   var Material = class {
-    constructor(glContext, vertexShaderSource, fragmentShaderSource, attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"], uniforms = ["uMV", "uP", "uMVn", "uMVP"], textureSamplers = []) {
-      this.attributes = [];
-      this.uniforms = [];
+    constructor(glContext, vertexShaderSource, fragmentShaderSource, attributes = [], uniforms = [], textureSamplers = []) {
+      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
+      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
       this.textureSamplers = [];
       this.vertexShader = null;
       this.fragmentShader = null;
@@ -4983,9 +4983,15 @@
       this.glContext = glContext;
       this.vertexSource = vertexShaderSource;
       this.fragmentSource = fragmentShaderSource;
-      this.attributes = attributes;
-      this.uniforms = uniforms;
-      this.textureSamplers = textureSamplers;
+      if (attributes.length) {
+        this.attributes = attributes;
+      }
+      if (uniforms.length) {
+        this.uniforms = uniforms;
+      }
+      if (textureSamplers.length) {
+        this.textureSamplers = textureSamplers;
+      }
       if (!this.glContext) {
         return;
       }
@@ -4993,12 +4999,12 @@
         glContext,
         vertexShaderSource,
         fragmentShaderSource,
-        attributes,
-        uniforms,
-        textureSamplers
+        this.attributes,
+        this.uniforms,
+        this.textureSamplers
       );
     }
-    compile(glContext, vertexShaderSource, fragmentShaderSource, attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"], uniforms = ["uMV", "uMVn", "uMVP"], textureSamplers = []) {
+    compile(glContext, vertexShaderSource, fragmentShaderSource, attributes, uniforms, textureSamplers) {
       this.vertexShader = glContext.createShader(
         glContext.VERTEX_SHADER
       );
@@ -5008,7 +5014,7 @@
       glContext.shaderSource(this.vertexShader, vertexShaderSource);
       glContext.compileShader(this.vertexShader);
       if (!glContext.getShaderParameter(this.vertexShader, glContext.COMPILE_STATUS)) {
-        throw new Error("Failed to compile vertex shader");
+        throw new Error(glContext.getShaderInfoLog(this.vertexShader));
       }
       this.fragmentShader = glContext.createShader(
         glContext.FRAGMENT_SHADER
@@ -5022,7 +5028,9 @@
         this.fragmentShader,
         glContext.COMPILE_STATUS
       )) {
-        throw new Error("Failed to compile fragment shader");
+        throw new Error(
+          glContext.getShaderInfoLog(this.fragmentShader)
+        );
       }
       this.shaderProgram = glContext.createProgram();
       if (!this.shaderProgram) {
@@ -5035,11 +5043,12 @@
         throw new Error("Failed to link shader program");
       }
       for (const attribute of attributes) {
-        this.attributeLocations[attribute] = glContext.getAttribLocation(
+        const location = glContext.getAttribLocation(
           this.shaderProgram,
           attribute
         );
-        glContext.enableVertexAttribArray(this.attributeLocations[attribute]);
+        this.attributeLocations[attribute] = location;
+        glContext.enableVertexAttribArray(location);
       }
       for (const uniform of uniforms) {
         this.uniformLocations[uniform] = glContext.getUniformLocation(
@@ -5056,8 +5065,17 @@
         glContext.uniform1i(this.samplerLocations[element], i);
       }
     }
-    use() {
-      this.glContext.useProgram(this.shaderProgram);
+    use(glContext) {
+      glContext.useProgram(this.shaderProgram);
+    }
+  };
+  var MaterialDescriptor = class {
+    constructor(vertexSource = default_vert_default, fragmentSource = default_frag_default) {
+      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
+      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
+      this.textureSamplers = [];
+      this.vertexSource = vertexSource;
+      this.fragmentSource = fragmentSource;
     }
     copy(m) {
       this.vertexSource = m.vertexSource;
@@ -5065,33 +5083,36 @@
       this.attributes = m.attributes;
       this.uniforms = m.uniforms;
       this.textureSamplers = m.textureSamplers;
-      if (!this.glContext) {
-        return this;
-      }
-      this.compile(
-        this.glContext,
-        this.vertexSource,
-        this.fragmentSource,
-        this.attributes,
-        this.uniforms,
-        this.textureSamplers
-      );
       return this;
     }
     clone() {
-      return new Material(
-        this.glContext,
-        this.vertexSource,
-        this.fragmentSource,
-        this.attributes,
-        this.uniforms,
-        this.textureSamplers
-      );
+      return new MaterialDescriptor().copy(this);
     }
   };
-  var MaterialType = createType({
-    name: "Material",
-    default: new Material(null, default_vert_default, default_frag_default),
+  var MaterialDescriptorType = createType({
+    name: "MaterialDescriptor",
+    default: new MaterialDescriptor(),
+    copy: copyCopyable,
+    clone: cloneClonable
+  });
+
+  // white-dwarf/src/Core/Render/Mesh.ts
+  var Mesh = class {
+    copy(m) {
+      this.vertexPositions = new Float32Array(m.vertexPositions);
+      this.vertexNormals = new Float32Array(m.vertexNormals);
+      this.vertexColors = new Float32Array(m.vertexColors);
+      this.vertexTexCoords = new Float32Array(m.vertexTexCoords);
+      this.triangleIndices = new Uint8Array(m.triangleIndices);
+      return this;
+    }
+    clone() {
+      return new Mesh().copy(this);
+    }
+  };
+  var MeshType = createType({
+    name: "Mesh",
+    default: new Mesh(),
     copy: copyCopyable,
     clone: cloneClonable
   });
@@ -5100,8 +5121,17 @@
   var MeshRenderData3D = class extends Component {
   };
   MeshRenderData3D.schema = {
+    mesh: {
+      type: MeshType
+    },
+    meshBuffer: {
+      type: Types.Ref
+    },
+    materialDesc: {
+      type: MaterialDescriptorType
+    },
     material: {
-      type: MaterialType
+      type: Types.Ref
     }
   };
   MeshRenderData3D = __decorateClass([
@@ -5221,51 +5251,12 @@
     IComponent.register
   ], PerspectiveCameraData3D);
 
-  // white-dwarf/src/Core/Physics/DataComponents/ConstraintData.ts
-  var ConstraintData = class extends Component {
+  // white-dwarf/src/Core/Render/TagComponent/MainCameraInitTag.ts
+  var MainCameraInitTag = class extends TagComponent {
   };
-  ConstraintData.schema = {
-    constraints: {
-      type: Types.Ref,
-      default: []
-    }
-  };
-  ConstraintData = __decorateClass([
+  MainCameraInitTag = __decorateClass([
     IComponent.register
-  ], ConstraintData);
-
-  // white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D.ts
-  var OrthographicCameraData3D = class extends Component {
-  };
-  OrthographicCameraData3D.schema = {
-    left: {
-      type: Types.Number,
-      default: -1
-    },
-    right: {
-      type: Types.Number,
-      default: 1
-    },
-    top: {
-      type: Types.Number,
-      default: 1
-    },
-    bottom: {
-      type: Types.Number,
-      default: -1
-    },
-    near: {
-      type: Types.Number,
-      default: 0.1
-    },
-    far: {
-      type: Types.Number,
-      default: 1e3
-    }
-  };
-  OrthographicCameraData3D = __decorateClass([
-    IComponent.register
-  ], OrthographicCameraData3D);
+  ], MainCameraInitTag);
 
   // white-dwarf/src/Core/Render/TagComponent/MainCameraTag.ts
   var MainCameraTag = class extends TagComponent {
@@ -5273,401 +5264,6 @@
   MainCameraTag = __decorateClass([
     IComponent.register
   ], MainCameraTag);
-
-  // white-dwarf/src/Core/Render/System/Canvas3DRenderer.ts
-  var Canvas3DRenderer = class extends System {
-    constructor() {
-      super(...arguments);
-      this.worldToCamera = mat4_exports.create();
-      this.cameraToScreen = mat4_exports.create();
-    }
-    init(attributes) {
-      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
-      this.canvasContext = this.mainCanvas.getContext(
-        "2d"
-      );
-    }
-    execute(delta, time) {
-      if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length === 0) {
-        throw new Error("Main camera not found.");
-      } else if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length > 1) {
-        throw new Error("More than one main camera found.");
-      }
-    }
-    orthographicWorldToCamera(camTransform, camData) {
-      const worldToCamera = mat4_exports.create();
-      mat4_exports.invert(worldToCamera, this.objectToWorld(camTransform));
-      const orthographic = mat4_exports.create();
-      mat4_exports.ortho(
-        orthographic,
-        camData.left,
-        camData.right,
-        camData.bottom,
-        camData.top,
-        camData.near,
-        camData.far
-      );
-      mat4_exports.multiply(worldToCamera, orthographic, worldToCamera);
-      return worldToCamera;
-    }
-    perspectiveWorldToCamera(camTransform, camData) {
-      const worldToCamera = mat4_exports.create();
-      mat4_exports.invert(worldToCamera, this.objectToWorld(camTransform));
-      const perspective2 = mat4_exports.create();
-      mat4_exports.perspective(
-        perspective2,
-        camData.fov,
-        camData.aspect,
-        camData.near,
-        camData.far
-      );
-      mat4_exports.multiply(worldToCamera, perspective2, worldToCamera);
-      return worldToCamera;
-    }
-    objectToWorld(transform, dropScale = false) {
-      const objectToWorld = mat4_exports.create();
-      if (dropScale) {
-        mat4_exports.fromRotationTranslation(
-          objectToWorld,
-          transform.rotation.value,
-          transform.position.value
-        );
-      } else {
-        mat4_exports.fromRotationTranslationScale(
-          objectToWorld,
-          transform.rotation.value,
-          transform.position.value,
-          transform.scale.value
-        );
-      }
-      return objectToWorld;
-    }
-    generateCameraToScreenMatrix() {
-      this.cameraToScreen = mat4_exports.create();
-      mat4_exports.fromTranslation(this.cameraToScreen, [
-        this.mainCanvas.width / 2,
-        this.mainCanvas.height / 2,
-        0
-      ]);
-      mat4_exports.scale(this.cameraToScreen, this.cameraToScreen, [
-        this.mainCanvas.width,
-        this.mainCanvas.height,
-        1
-      ]);
-    }
-    generateWorldToCameraMatrix() {
-      const canvasSize = vec2_exports.fromValues(
-        this.mainCanvas.width,
-        this.mainCanvas.height
-      );
-      if (this.queries.perspectiveMainCamera.results.length > 0) {
-        const camera = this.queries.perspectiveMainCamera.results[0];
-        const cameraTransform = camera.getComponent(
-          TransformData3D
-        );
-        const cameraPerspective = camera.getMutableComponent(
-          PerspectiveCameraData3D
-        );
-        cameraPerspective.aspect = canvasSize[0] / canvasSize[1];
-        this.worldToCamera = this.perspectiveWorldToCamera(
-          cameraTransform,
-          cameraPerspective
-        );
-      } else {
-      }
-    }
-    drawLine(startPoint, endPoint, color, lineWidth) {
-      if (startPoint[2] > 1 && endPoint[2] > 1) {
-        this.canvasContext.strokeStyle = color;
-        this.canvasContext.lineWidth = lineWidth;
-        this.canvasContext.beginPath();
-        this.canvasContext.moveTo(startPoint[0], startPoint[1]);
-        this.canvasContext.lineTo(endPoint[0], endPoint[1]);
-        this.canvasContext.stroke();
-      }
-    }
-  };
-  Canvas3DRenderer.queries = {
-    perspectiveMainCamera: {
-      components: [MainCameraTag, PerspectiveCameraData3D, TransformData3D]
-    },
-    orthographicMainCamera: {
-      components: [MainCameraTag, OrthographicCameraData3D, TransformData3D]
-    }
-  };
-
-  // white-dwarf/src/Core/Render/System/BuildInRenderers/Canvas3DConstraintRenderer.ts
-  var _Canvas3DConstraintRenderer = class extends Canvas3DRenderer {
-    execute(delta, time) {
-      try {
-        super.execute(delta, time);
-      } catch (error) {
-        console.warn(error);
-        return;
-      }
-      this.generateWorldToCameraMatrix();
-      this.generateCameraToScreenMatrix();
-      const worldToScreen = mat4_exports.multiply(
-        mat4_exports.create(),
-        this.cameraToScreen,
-        this.worldToCamera
-      );
-      const visited = /* @__PURE__ */ new Set();
-      this.queries.constraintEntities.results.forEach((entity) => {
-        var _a;
-        const frontier = new Array();
-        frontier.push(entity);
-        while (frontier.length > 0) {
-          let curr = frontier.pop();
-          if (visited.has(curr)) {
-            continue;
-          }
-          visited.add(curr);
-          const currTransform = curr.getComponent(
-            TransformData3D
-          );
-          if (curr.hasComponent(ConstraintData)) {
-            (_a = curr.getComponent(ConstraintData)) == null ? void 0 : _a.constraints.forEach((constraint) => {
-              frontier.push(constraint.target);
-              const constraintTransform = constraint.target.getComponent(
-                TransformData3D
-              );
-              if (currTransform && constraintTransform) {
-                const startPos = vec3_exports.transformMat4(
-                  vec3_exports.create(),
-                  currTransform.position.value,
-                  worldToScreen
-                );
-                const endPos = vec3_exports.transformMat4(
-                  vec3_exports.create(),
-                  constraintTransform.position.value,
-                  worldToScreen
-                );
-                this.drawLine(startPos, endPos, "black", 1);
-              }
-            });
-          }
-        }
-      });
-    }
-  };
-  var Canvas3DConstraintRenderer = _Canvas3DConstraintRenderer;
-  Canvas3DConstraintRenderer.queries = __spreadProps(__spreadValues({}, _Canvas3DConstraintRenderer.queries), {
-    constraintEntities: {
-      components: [TransformData3D, ConstraintData]
-    }
-  });
-
-  // white-dwarf/src/Mathematics/LineFrame3DSegment.ts
-  var LineFrame3DSegment = class {
-    constructor(p0, p1) {
-      this.p0 = p0;
-      this.p1 = p1;
-    }
-    set(p0, p1) {
-      this.p0 = p0;
-      this.p1 = p1;
-    }
-    copy(h) {
-      this.p0 = h.p0.clone();
-      this.p1 = h.p1.clone();
-      return this;
-    }
-    clone() {
-      return new LineFrame3DSegment(this.p0.clone(), this.p1.clone());
-    }
-  };
-  var LineFrame3DSegmentType = createType({
-    name: "LineFrame3DSegment",
-    default: new LineFrame3DSegment(new Vector3(0, 0, 0), new Vector3(0, 0, 0)),
-    copy: copyCopyable,
-    clone: cloneClonable
-  });
-  var LineFrame3DSegmentEditor = (segment, onChange) => {
-    const el = document.createElement("div");
-    const p0 = document.createElement("div");
-    const p1 = document.createElement("div");
-    el.appendChild(p0);
-    el.appendChild(p1);
-    p0.innerText = "p0";
-    p1.innerText = "p1";
-    p0.appendChild(
-      Vector3CustomEditor(segment.p0, (v) => {
-        segment.p0 = v;
-        onChange(segment);
-      })[0]
-    );
-    p1.appendChild(
-      Vector3CustomEditor(segment.p1, (v) => {
-        segment.p1 = v;
-        onChange(segment);
-      })[0]
-    );
-    return el;
-  };
-
-  // white-dwarf/src/Core/Render/DataComponent/LineFrameRenderData3D.ts
-  var LineFrameRenderData3D = class extends Component {
-    constructor() {
-      super(...arguments);
-      this.color = "black";
-      this.segments = [];
-      this.useDefaultInspector = false;
-      this.onInspector = (componentDiv) => {
-        const colorDiv = document.createElement("div");
-        colorDiv.style.display = "flex";
-        colorDiv.style.flexDirection = "row";
-        const colorLabel = document.createElement("label");
-        colorLabel.appendChild(document.createTextNode("Color: "));
-        colorDiv.appendChild(colorLabel);
-        const colorInput = document.createElement("input");
-        colorInput.type = "color";
-        colorInput.value = this.color;
-        colorInput.style.flexGrow = "1";
-        colorInput.onchange = () => {
-          this.color = colorInput.value;
-          this.eventEmitter.emit(COMPONENT_CHANGE_EVENT, this);
-        };
-        colorDiv.appendChild(colorInput);
-        componentDiv.appendChild(colorDiv);
-        const curveSegmentsDiv = document.createElement("div");
-        curveSegmentsDiv.style.display = "flex";
-        curveSegmentsDiv.style.flexDirection = "column";
-        this.populateSegmentEditor(curveSegmentsDiv);
-        this.eventEmitter.on(COMPONENT_CHANGE_EVENT, (component) => {
-          this.RepopulateCurveUI(curveSegmentsDiv);
-        });
-        componentDiv.appendChild(curveSegmentsDiv);
-        const addCurveSegmentButton = document.createElement("button");
-        addCurveSegmentButton.innerText = "Add Curve Segment";
-        addCurveSegmentButton.onclick = () => {
-          this.segments.push(
-            new LineFrame3DSegment(new Vector3(0, 0, 0), new Vector3(0, 0, 0))
-          );
-          this.eventEmitter.emit(COMPONENT_CHANGE_EVENT, this);
-        };
-        componentDiv.appendChild(addCurveSegmentButton);
-      };
-    }
-    RepopulateCurveUI(curveSegmentsDiv) {
-      curveSegmentsDiv.innerHTML = "";
-      this.populateSegmentEditor(curveSegmentsDiv);
-    }
-    populateSegmentEditor(curveSegmentsDiv) {
-      this.segments.forEach((segment, index) => {
-        const segmentDiv = document.createElement("div");
-        segmentDiv.style.display = "flex";
-        segmentDiv.style.flexDirection = "column";
-        segmentDiv.style.border = "1px solid black";
-        segmentDiv.appendChild(document.createTextNode(`Segment ${index}`));
-        const segmentEditor = LineFrame3DSegmentEditor(segment, (value2) => {
-          this.segments[index] = value2;
-          this.eventEmitter.emit(COMPONENT_CHANGE_EVENT, this);
-        });
-        segmentDiv.appendChild(segmentEditor);
-        const removeSegmentButton = document.createElement("button");
-        removeSegmentButton.appendChild(document.createTextNode("Remove"));
-        removeSegmentButton.onclick = () => {
-          this.segments.splice(index, 1);
-          this.eventEmitter.emit(COMPONENT_CHANGE_EVENT, this);
-        };
-        segmentDiv.appendChild(removeSegmentButton);
-        curveSegmentsDiv.appendChild(segmentDiv);
-      });
-    }
-  };
-  LineFrameRenderData3D.schema = {
-    color: {
-      type: Types.String,
-      default: "black"
-    },
-    segments: {
-      type: Types.Array,
-      default: []
-    }
-  };
-  LineFrameRenderData3D = __decorateClass([
-    IComponent.register
-  ], LineFrameRenderData3D);
-
-  // white-dwarf/src/Core/Render/System/BuildInRenderers/Canvas3DLineFrameRenderer.ts
-  var _Canvas3DLineFrameRenderer = class extends Canvas3DRenderer {
-    execute(delta, time) {
-      try {
-        super.execute(delta, time);
-      } catch (error) {
-        console.warn(error);
-        return;
-      }
-      this.generateWorldToCameraMatrix();
-      this.generateCameraToScreenMatrix();
-      this.queries.lineEntities.results.forEach((entity) => {
-        const transform = entity.getComponent(TransformData3D);
-        const renderData = entity.getComponent(
-          LineFrameRenderData3D
-        );
-        const objectToWorld = this.objectToWorld(transform);
-        renderData.segments.forEach((segment) => {
-          const objectToScreen = mat4_exports.create();
-          mat4_exports.multiply(objectToScreen, this.worldToCamera, objectToWorld);
-          mat4_exports.multiply(objectToScreen, this.cameraToScreen, objectToScreen);
-          const startPoint = vec3_exports.create();
-          vec3_exports.transformMat4(startPoint, segment.p0.value, objectToScreen);
-          const endPoint = vec3_exports.create();
-          vec3_exports.transformMat4(endPoint, segment.p1.value, objectToScreen);
-          this.drawLine(startPoint, endPoint, renderData.color, 1);
-        });
-      });
-    }
-  };
-  var Canvas3DLineFrameRenderer = _Canvas3DLineFrameRenderer;
-  Canvas3DLineFrameRenderer.queries = __spreadProps(__spreadValues({}, _Canvas3DLineFrameRenderer.queries), {
-    lineEntities: {
-      components: [LineFrameRenderData3D, TransformData3D]
-    }
-  });
-
-  // white-dwarf/src/Core/Render/System/ClearCanvas2DSystem.ts
-  var ClearCanvas2DSystem = class extends System {
-    init(attributes) {
-      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
-      this.canvasContext = this.mainCanvas.getContext(
-        "2d"
-      );
-    }
-    execute(delta, time) {
-      this.canvasContext.clearRect(
-        0,
-        0,
-        this.mainCanvas.width,
-        this.mainCanvas.height
-      );
-    }
-  };
-
-  // white-dwarf/src/Core/Render/RenderSystem3DRegister.ts
-  var RenderSystem3DRegister = class {
-    constructor(mainCanvas) {
-      this.register = (world) => {
-        world.registerSystem(ClearCanvas2DSystem, {
-          mainCanvas: this.mainCanvas,
-          priority: -100
-        }).registerSystem(Canvas3DLineFrameRenderer, {
-          mainCanvas: this.mainCanvas
-        }).registerSystem(Canvas3DConstraintRenderer, {
-          mainCanvas: this.mainCanvas
-        });
-      };
-      this.mainCanvas = mainCanvas;
-    }
-  };
-
-  // white-dwarf/src/Core/Render/TagComponent/MainCameraInitTag.ts
-  var MainCameraInitTag = class extends TagComponent {
-  };
-  MainCameraInitTag = __decorateClass([
-    IComponent.register
-  ], MainCameraInitTag);
 
   // white-dwarf/src/Core/Render/System/MainCameraInitSystem.ts
   var MainCameraInitSystem = class extends System {
@@ -5788,6 +5384,478 @@
       worldObject.entities.forEach((entityObject) => {
         EntitySerializer.deserializeEntity(world, entityObject);
       });
+    }
+  };
+
+  // white-dwarf/src/Editor/System/EditorCamTagAppendSystem.ts
+  var EditorCamTagAppendSystem = class extends System {
+    init(attributes) {
+      if (this.queries.mainCamera.results.length === 0) {
+        throw new Error("Main camera not found.");
+      } else if (this.queries.mainCamera.results.length > 1) {
+        throw new Error("More than one main camera found.");
+      }
+      this.queries.mainCamera.results[0].addComponent(EditorSceneCamTag);
+    }
+    execute(delta, time) {
+    }
+  };
+  EditorCamTagAppendSystem.queries = {
+    mainCamera: {
+      components: [MainCameraTag]
+    }
+  };
+
+  // white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D.ts
+  var OrthographicCameraData3D = class extends Component {
+  };
+  OrthographicCameraData3D.schema = {
+    left: {
+      type: Types.Number,
+      default: -1
+    },
+    right: {
+      type: Types.Number,
+      default: 1
+    },
+    top: {
+      type: Types.Number,
+      default: 1
+    },
+    bottom: {
+      type: Types.Number,
+      default: -1
+    },
+    near: {
+      type: Types.Number,
+      default: 0.1
+    },
+    far: {
+      type: Types.Number,
+      default: 1e3
+    }
+  };
+  OrthographicCameraData3D = __decorateClass([
+    IComponent.register
+  ], OrthographicCameraData3D);
+
+  // white-dwarf/src/Core/Render/System/CanvasWebGLRenderer.ts
+  var CanvasWebGLRenderer = class extends System {
+    constructor() {
+      super(...arguments);
+      this.cameraPerspective = null;
+      this.cameraOrthographic = null;
+    }
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.canvasContext = this.mainCanvas.getContext(
+        "webgl"
+      );
+    }
+    execute(delta, time) {
+      if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length === 0) {
+        throw new Error("Main camera not found.");
+      } else if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length > 1) {
+        throw new Error("More than one main camera found.");
+      }
+      const canvasSize = vec2_exports.fromValues(
+        this.mainCanvas.width,
+        this.mainCanvas.height
+      );
+      this.canvasContext.viewport(0, 0, canvasSize[0], canvasSize[1]);
+      if (this.queries.perspectiveMainCamera.results.length > 0) {
+        const camera = this.queries.perspectiveMainCamera.results[0];
+        this.cameraTransform = camera.getComponent(
+          TransformData3D
+        );
+        this.cameraPerspective = camera.getMutableComponent(
+          PerspectiveCameraData3D
+        );
+        this.cameraPerspective.aspect = canvasSize[0] / canvasSize[1];
+      } else {
+        const camera = this.queries.orthographicMainCamera.results[0];
+        this.cameraTransform = camera.getComponent(
+          TransformData3D
+        );
+        this.cameraOrthographic = camera.getMutableComponent(
+          OrthographicCameraData3D
+        );
+        this.cameraOrthographic.left = -canvasSize[0] * 10 / (2 * canvasSize[1]);
+        this.cameraOrthographic.right = canvasSize[0] * 10 / (2 * canvasSize[1]);
+        this.cameraOrthographic.bottom = -10 / 2;
+        this.cameraOrthographic.top = 10 / 2;
+      }
+    }
+    getModelMatrix(transform, dropScale = false) {
+      const objectToWorld = mat4_exports.create();
+      if (dropScale) {
+        mat4_exports.fromRotationTranslation(
+          objectToWorld,
+          transform.rotation.value,
+          transform.position.value
+        );
+      } else {
+        mat4_exports.fromRotationTranslationScale(
+          objectToWorld,
+          transform.rotation.value,
+          transform.position.value,
+          transform.scale.value
+        );
+      }
+      return objectToWorld;
+    }
+    getViewMatrix(camTransform) {
+      const worldToCamera = mat4_exports.create();
+      const cameraToWorld = mat4_exports.create();
+      mat4_exports.fromRotationTranslationScale(
+        cameraToWorld,
+        camTransform.rotation.value,
+        camTransform.position.value,
+        vec3_exports.fromValues(-1, 1, -1)
+      );
+      mat4_exports.invert(worldToCamera, cameraToWorld);
+      return worldToCamera;
+    }
+    getOrthographicProjectionMatrix(camData) {
+      const orthographic = mat4_exports.create();
+      mat4_exports.ortho(
+        orthographic,
+        camData.left,
+        camData.right,
+        camData.bottom,
+        camData.top,
+        camData.near,
+        camData.far
+      );
+      return orthographic;
+    }
+    getPerspectiveProjectionMatrix(camData) {
+      const perspective2 = mat4_exports.create();
+      mat4_exports.perspective(
+        perspective2,
+        camData.fov,
+        camData.aspect,
+        camData.near,
+        camData.far
+      );
+      return perspective2;
+    }
+    getNDCToViewportMatrix() {
+      const ndcToViewport = mat4_exports.create();
+      mat4_exports.fromTranslation(ndcToViewport, [
+        this.mainCanvas.width / 2,
+        this.mainCanvas.height / 2,
+        0
+      ]);
+      mat4_exports.scale(ndcToViewport, ndcToViewport, [
+        this.mainCanvas.width,
+        this.mainCanvas.height,
+        1
+      ]);
+      return ndcToViewport;
+    }
+  };
+  CanvasWebGLRenderer.queries = {
+    perspectiveMainCamera: {
+      components: [MainCameraTag, PerspectiveCameraData3D, TransformData3D]
+    },
+    orthographicMainCamera: {
+      components: [MainCameraTag, OrthographicCameraData3D, TransformData3D]
+    }
+  };
+
+  // white-dwarf/src/Core/Render/System/BuildInRenderers/WebGL/WebGLOpaqueRenderer.ts
+  var _WebGLOpaqueRenderer = class extends CanvasWebGLRenderer {
+    execute(delta, time) {
+      try {
+        super.execute(delta, time);
+      } catch (error) {
+        console.warn(error);
+        return;
+      }
+      const tView = this.getViewMatrix(this.cameraTransform);
+      let tProjection;
+      if (this.cameraPerspective) {
+        tProjection = this.getPerspectiveProjectionMatrix(this.cameraPerspective);
+      } else if (this.cameraOrthographic) {
+        tProjection = this.getOrthographicProjectionMatrix(
+          this.cameraOrthographic
+        );
+      } else {
+        throw new Error("No camera found.");
+      }
+      this.queries.meshEntities.results.forEach((entity) => {
+        const transform = entity.getComponent(TransformData3D);
+        const meshRenderData = entity.getComponent(
+          MeshRenderData3D
+        );
+        const material = meshRenderData.material;
+        const meshBuffer = meshRenderData.meshBuffer;
+        if (!material || !meshBuffer) {
+          return;
+        }
+        const tModel = this.getModelMatrix(transform);
+        const tMV = mat4_exports.create();
+        mat4_exports.multiply(tMV, tView, tModel);
+        const tMVn = mat3_exports.create();
+        mat3_exports.normalFromMat4(tMVn, tMV);
+        const tMVP = mat4_exports.create();
+        mat4_exports.multiply(tMVP, tProjection, tMV);
+        material.use(this.canvasContext);
+        this.canvasContext.uniformMatrix4fv(
+          material.uniformLocations.uMV,
+          false,
+          tMV
+        );
+        this.canvasContext.uniformMatrix4fv(
+          material.uniformLocations.uP,
+          false,
+          tProjection
+        );
+        this.canvasContext.uniformMatrix3fv(
+          material.uniformLocations.uMVn,
+          false,
+          tMVn
+        );
+        this.canvasContext.uniformMatrix4fv(
+          material.uniformLocations.uMVP,
+          false,
+          tMVP
+        );
+        this.canvasContext.bindBuffer(
+          this.canvasContext.ARRAY_BUFFER,
+          meshBuffer.vertexPositionsBuffer
+        );
+        this.canvasContext.vertexAttribPointer(
+          material.attributeLocations.vPosition,
+          meshBuffer.bufferInfos.vertexPositions.itemSize,
+          this.canvasContext.FLOAT,
+          false,
+          0,
+          0
+        );
+        this.canvasContext.bindBuffer(
+          this.canvasContext.ARRAY_BUFFER,
+          meshBuffer.vertexNormalsBuffer
+        );
+        this.canvasContext.vertexAttribPointer(
+          material.attributeLocations.vNormal,
+          meshBuffer.bufferInfos.vertexNormals.itemSize,
+          this.canvasContext.FLOAT,
+          false,
+          0,
+          0
+        );
+        this.canvasContext.bindBuffer(
+          this.canvasContext.ARRAY_BUFFER,
+          meshBuffer.vertexColorsBuffer
+        );
+        this.canvasContext.vertexAttribPointer(
+          material.attributeLocations.vColor,
+          meshBuffer.bufferInfos.vertexColors.itemSize,
+          this.canvasContext.FLOAT,
+          false,
+          0,
+          0
+        );
+        this.canvasContext.bindBuffer(
+          this.canvasContext.ARRAY_BUFFER,
+          meshBuffer.vertexTexCoordsBuffer
+        );
+        this.canvasContext.vertexAttribPointer(
+          material.attributeLocations.vTexCoord,
+          meshBuffer.bufferInfos.vertexTexCoords.itemSize,
+          this.canvasContext.FLOAT,
+          false,
+          0,
+          0
+        );
+        this.canvasContext.drawElements(
+          this.canvasContext.TRIANGLES,
+          meshBuffer.bufferInfos.triangleIndices.numItems,
+          this.canvasContext.UNSIGNED_BYTE,
+          0
+        );
+      });
+    }
+  };
+  var WebGLOpaqueRenderer = _WebGLOpaqueRenderer;
+  WebGLOpaqueRenderer.queries = __spreadProps(__spreadValues({}, _WebGLOpaqueRenderer.queries), {
+    meshEntities: {
+      components: [TransformData3D, MeshRenderData3D]
+    }
+  });
+
+  // white-dwarf/src/Core/Render/System/ClearCanvasWebGLSystem.ts
+  var ClearCanvasWebGLSystem = class extends System {
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.glContext = this.mainCanvas.getContext(
+        "webgl"
+      );
+    }
+    execute(delta, time) {
+      this.glContext.clearColor(0, 0, 0, 1);
+      this.glContext.enable(this.glContext.DEPTH_TEST);
+      this.glContext.clear(
+        this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT
+      );
+    }
+  };
+
+  // white-dwarf/src/Core/Render/MeshBuffer.ts
+  var MeshBuffer = class {
+    constructor(glContext, mesh) {
+      this.bufferInfos = {
+        vertexPositions: null,
+        vertexNormals: null,
+        vertexColors: null,
+        vertexTexCoords: null,
+        triangleIndices: null
+      };
+      this.vertexPositionsBuffer = glContext.createBuffer();
+      glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexPositionsBuffer);
+      glContext.bufferData(
+        glContext.ARRAY_BUFFER,
+        new Float32Array(mesh.vertexPositions),
+        glContext.STATIC_DRAW
+      );
+      this.bufferInfos.vertexPositions = {
+        itemSize: 3,
+        numItems: mesh.vertexPositions.length / 3
+      };
+      this.vertexNormalsBuffer = glContext.createBuffer();
+      glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexNormalsBuffer);
+      glContext.bufferData(
+        glContext.ARRAY_BUFFER,
+        new Float32Array(mesh.vertexNormals),
+        glContext.STATIC_DRAW
+      );
+      this.bufferInfos.vertexNormals = {
+        itemSize: 3,
+        numItems: mesh.vertexNormals.length / 3
+      };
+      this.vertexColorsBuffer = glContext.createBuffer();
+      glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexColorsBuffer);
+      glContext.bufferData(
+        glContext.ARRAY_BUFFER,
+        new Float32Array(mesh.vertexColors),
+        glContext.STATIC_DRAW
+      );
+      this.bufferInfos.vertexColors = {
+        itemSize: 3,
+        numItems: mesh.vertexColors.length / 3
+      };
+      this.vertexTexCoordsBuffer = glContext.createBuffer();
+      glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexTexCoordsBuffer);
+      glContext.bufferData(
+        glContext.ARRAY_BUFFER,
+        new Float32Array(mesh.vertexTexCoords),
+        glContext.STATIC_DRAW
+      );
+      this.bufferInfos.vertexTexCoords = {
+        itemSize: 2,
+        numItems: mesh.vertexTexCoords.length / 2
+      };
+      this.triangleIndicesBuffer = glContext.createBuffer();
+      glContext.bindBuffer(
+        glContext.ELEMENT_ARRAY_BUFFER,
+        this.triangleIndicesBuffer
+      );
+      glContext.bufferData(
+        glContext.ELEMENT_ARRAY_BUFFER,
+        new Uint8Array(mesh.triangleIndices),
+        glContext.STATIC_DRAW
+      );
+      this.bufferInfos.triangleIndices = {
+        itemSize: 1,
+        numItems: mesh.triangleIndices.length
+      };
+    }
+  };
+
+  // white-dwarf/src/Core/Render/Shader/ErrorShader/error_frag.glsl
+  var error_frag_default = "precision highp float;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=vec4(1.0,0.0,1.0,1.0);}";
+
+  // white-dwarf/src/Core/Render/System/WebGLMeshCompiler.ts
+  var WebGLMeshCompiler = class extends System {
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.canvasContext = this.mainCanvas.getContext(
+        "webgl"
+      );
+    }
+    execute(delta, time) {
+      var _a, _b;
+      (_a = this.queries.meshEntities.added) == null ? void 0 : _a.forEach((entity) => {
+        this.compileMesh(entity);
+        this.compileMaterial(entity);
+      });
+      (_b = this.queries.meshEntities.changed) == null ? void 0 : _b.forEach((entity) => {
+        this.compileMesh(entity);
+        this.compileMaterial(entity);
+      });
+    }
+    compileMesh(entity) {
+      const meshRenderData = entity.getMutableComponent(
+        MeshRenderData3D
+      );
+      meshRenderData.meshBuffer = new MeshBuffer(
+        this.canvasContext,
+        meshRenderData.mesh
+      );
+    }
+    compileMaterial(entity) {
+      const meshRenderData = entity.getMutableComponent(
+        MeshRenderData3D
+      );
+      try {
+        meshRenderData.material = new Material(
+          this.canvasContext,
+          meshRenderData.materialDesc.vertexSource,
+          meshRenderData.materialDesc.fragmentSource,
+          meshRenderData.materialDesc.attributes,
+          meshRenderData.materialDesc.uniforms,
+          meshRenderData.materialDesc.textureSamplers
+        );
+      } catch (e) {
+        meshRenderData.material = new Material(
+          this.canvasContext,
+          default_vert_default,
+          error_frag_default,
+          meshRenderData.materialDesc.attributes,
+          meshRenderData.materialDesc.uniforms,
+          meshRenderData.materialDesc.textureSamplers
+        );
+        console.error(e);
+      }
+    }
+  };
+  WebGLMeshCompiler.queries = {
+    meshEntities: {
+      components: [MeshRenderData3D],
+      listen: {
+        added: true,
+        changed: true
+      }
+    }
+  };
+
+  // white-dwarf/src/Core/Render/WebGLRenderPipelineRegister.ts
+  var WebGLRenderPipelineRegister = class {
+    constructor(mainCanvas) {
+      this.register = (world) => {
+        world.registerSystem(WebGLMeshCompiler, {
+          mainCanvas: this.mainCanvas
+        });
+        world.registerSystem(ClearCanvasWebGLSystem, {
+          mainCanvas: this.mainCanvas,
+          priority: -100
+        }).registerSystem(WebGLOpaqueRenderer, {
+          mainCanvas: this.mainCanvas
+        });
+      };
+      this.mainCanvas = mainCanvas;
     }
   };
 
@@ -5923,7 +5991,13 @@
       } else if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length > 1) {
         return;
       }
-      const mainCameraTransform = this.queries.perspectiveMainCamera.results[0].getMutableComponent(
+      let mainCameraEntity;
+      if (this.queries.perspectiveMainCamera.results.length === 1) {
+        mainCameraEntity = this.queries.perspectiveMainCamera.results[0];
+      } else {
+        mainCameraEntity = this.queries.orthographicMainCamera.results[0];
+      }
+      const mainCameraTransform = mainCameraEntity.getMutableComponent(
         TransformData3D
       );
       const front = vec3_exports.fromValues(0, 0, -1);
@@ -5971,196 +6045,11 @@
     }
   };
 
-  // white-dwarf/src/Editor/System/EditorViewPort3DSystem.ts
-  var moveControlThreshold = 30;
-  var _EditorViewPort3DSystem = class extends Canvas3DRenderer {
-    constructor() {
-      super(...arguments);
-      this.mousePosition = vec2_exports.create();
-      this.mouseDelta = vec2_exports.create();
-      this.mouseInCanvas = true;
-      this.highlightAxis = null;
-      this.movingAxis = null;
-    }
-    init(attributes) {
-      super.init(attributes);
-      this.mainCanvas.addEventListener("mousemove", (event) => {
-        this.mousePosition = this.getMousePos(event);
-        vec2_exports.add(
-          this.mouseDelta,
-          this.mouseDelta,
-          vec2_exports.fromValues(event.movementX, event.movementY)
-        );
-      });
-      this.mainCanvas.addEventListener("mouseenter", () => {
-        this.mouseInCanvas = true;
-      });
-      this.mainCanvas.addEventListener("mouseleave", () => {
-        this.mouseInCanvas = false;
-      });
-      this.mainCanvas.addEventListener("mousedown", (event) => {
-        if (event.button == 0) {
-          if (this.highlightAxis) {
-            this.movingAxis = this.highlightAxis;
-          }
-        }
-      });
-      this.mainCanvas.addEventListener("mouseup", (event) => {
-        if (event.button == 0) {
-          this.movingAxis = null;
-        }
-      });
-    }
-    execute(delta, time) {
-      var _a;
-      try {
-        super.execute(delta, time);
-      } catch (error) {
-        console.warn(error);
-        return;
-      }
-      this.generateWorldToCameraMatrix();
-      this.generateCameraToScreenMatrix();
-      if (editorControlContext.controlMode == 1 /* Move */ && _EditorViewPort3DSystem.inspectTransform && !((_a = _EditorViewPort3DSystem.inspectEntity) == null ? void 0 : _a.hasComponent(EditorSceneCamTag))) {
-        const objectToWorld = this.objectToWorld(
-          _EditorViewPort3DSystem.inspectTransform,
-          true
-        );
-        const objectToScreen = mat4_exports.create();
-        mat4_exports.multiply(objectToScreen, this.worldToCamera, objectToWorld);
-        mat4_exports.multiply(objectToScreen, this.cameraToScreen, objectToScreen);
-        this.drawAxis(objectToScreen);
-        const startPoint = vec3_exports.create();
-        vec3_exports.transformMat4(startPoint, [0, 0, 0], objectToScreen);
-        const endPointX = vec3_exports.create();
-        vec3_exports.transformMat4(endPointX, [1, 0, 0], objectToScreen);
-        const endPointY = vec3_exports.create();
-        vec3_exports.transformMat4(endPointY, [0, 1, 0], objectToScreen);
-        const endPointZ = vec3_exports.create();
-        vec3_exports.transformMat4(endPointZ, [0, 0, 1], objectToScreen);
-        if (this.mouseInCanvas) {
-          const xDistance = vec2_exports.distance(
-            this.mousePosition,
-            vec2_exports.fromValues(endPointX[0], endPointX[1])
-          );
-          const yDistance = vec2_exports.distance(
-            this.mousePosition,
-            vec2_exports.fromValues(endPointY[0], endPointY[1])
-          );
-          const zDistance = vec2_exports.distance(
-            this.mousePosition,
-            vec2_exports.fromValues(endPointZ[0], endPointZ[1])
-          );
-          const minDistance = Math.min(xDistance, yDistance, zDistance);
-          if (minDistance < moveControlThreshold) {
-            if (minDistance == xDistance) {
-              this.canvasContext.strokeStyle = "red";
-              this.canvasContext.beginPath();
-              this.canvasContext.arc(
-                endPointX[0],
-                endPointX[1],
-                moveControlThreshold,
-                0,
-                2 * Math.PI
-              );
-              this.canvasContext.stroke();
-              this.highlightAxis = "x";
-            } else if (minDistance == yDistance) {
-              this.canvasContext.strokeStyle = "green";
-              this.canvasContext.beginPath();
-              this.canvasContext.arc(
-                endPointY[0],
-                endPointY[1],
-                moveControlThreshold,
-                0,
-                2 * Math.PI
-              );
-              this.canvasContext.stroke();
-              this.highlightAxis = "y";
-            } else if (minDistance == zDistance) {
-              this.canvasContext.strokeStyle = "blue";
-              this.canvasContext.beginPath();
-              this.canvasContext.arc(
-                endPointZ[0],
-                endPointZ[1],
-                moveControlThreshold,
-                0,
-                2 * Math.PI
-              );
-              this.canvasContext.stroke();
-              this.highlightAxis = "z";
-            }
-          } else {
-            this.highlightAxis = null;
-          }
-          if (this.movingAxis) {
-            switch (this.movingAxis) {
-              case "x":
-                this.moveAxis(endPointX, startPoint, 0);
-                break;
-              case "y":
-                this.moveAxis(endPointY, startPoint, 1);
-                break;
-              case "z":
-                this.moveAxis(endPointZ, startPoint, 2);
-                break;
-              default:
-                break;
-            }
-          }
-        }
-      }
-      vec2_exports.set(this.mouseDelta, 0, 0);
-    }
-    moveAxis(axisEndPoint, startPoint, axisIndex) {
-      var _a;
-      const axisDir = vec2_exports.create();
-      vec2_exports.sub(
-        axisDir,
-        vec2_exports.fromValues(axisEndPoint[0], axisEndPoint[1]),
-        vec2_exports.fromValues(startPoint[0], startPoint[1])
-      );
-      let axisMove = vec2_exports.dot(
-        axisDir,
-        vec2_exports.fromValues(this.mouseDelta[0], this.mouseDelta[1])
-      );
-      axisMove = axisMove / Math.pow(vec2_exports.length(axisDir), 2);
-      if (_EditorViewPort3DSystem.inspectTransform) {
-        _EditorViewPort3DSystem.inspectTransform.position.value[axisIndex] += axisMove;
-        (_a = _EditorViewPort3DSystem.inspectEntity) == null ? void 0 : _a.getMutableComponent(
-          TransformData3D
-        );
-      }
-    }
-    drawAxis(objectToScreen) {
-      const startPoint = vec3_exports.create();
-      vec3_exports.transformMat4(startPoint, [0, 0, 0], objectToScreen);
-      const endPointX = vec3_exports.create();
-      vec3_exports.transformMat4(endPointX, [1, 0, 0], objectToScreen);
-      const endPointY = vec3_exports.create();
-      vec3_exports.transformMat4(endPointY, [0, 1, 0], objectToScreen);
-      const endPointZ = vec3_exports.create();
-      vec3_exports.transformMat4(endPointZ, [0, 0, 1], objectToScreen);
-      this.drawLine(startPoint, endPointX, "red", 1);
-      this.drawLine(startPoint, endPointY, "green", 1);
-      this.drawLine(startPoint, endPointZ, "blue", 1);
-    }
-    getMousePos(event) {
-      const rect = this.mainCanvas.getBoundingClientRect();
-      return vec2_exports.fromValues(event.clientX - rect.left, event.clientY - rect.top);
-    }
-  };
-  var EditorViewPort3DSystem = _EditorViewPort3DSystem;
-  EditorViewPort3DSystem.inspectEntity = null;
-  EditorViewPort3DSystem.inspectTransform = null;
-
-  // white-dwarf/src/Editor/EditorSystem3DRegister.ts
-  var EditorSystem3DRegister = class {
+  // white-dwarf/src/Editor/EditorSystemWebGLRegister.ts
+  var EditorSystemWebGLRegister = class {
     constructor(mainCanvas) {
       this.register = (world) => {
         world.registerSystem(Cam3DDragSystem, {
-          mainCanvas: this.mainCanvas
-        }).registerSystem(EditorViewPort3DSystem, {
           mainCanvas: this.mainCanvas
         });
       };
@@ -6168,22 +6057,138 @@
     }
   };
 
-  // white-dwarf/src/Editor/System/EditorCamTagAppendSystem.ts
-  var EditorCamTagAppendSystem = class extends System {
-    init(attributes) {
-      if (this.queries.mainCamera.results.length === 0) {
-        throw new Error("Main camera not found.");
-      } else if (this.queries.mainCamera.results.length > 1) {
-        throw new Error("More than one main camera found.");
-      }
-      this.queries.mainCamera.results[0].addComponent(EditorSceneCamTag);
-    }
-    execute(delta, time) {
-    }
-  };
-  EditorCamTagAppendSystem.queries = {
-    mainCamera: {
-      components: [MainCameraTag]
+  // white-dwarf/src/Utils/DefaultMeshes/CubeMesh.ts
+  var CubeMesh = class extends Mesh {
+    constructor() {
+      super(...arguments);
+      this.vertexPositions = new Float32Array(
+        [
+          [1, 1, 1],
+          [-1, 1, 1],
+          [-1, -1, 1],
+          [1, -1, 1],
+          [1, 1, 1],
+          [1, -1, 1],
+          [1, -1, -1],
+          [1, 1, -1],
+          [1, 1, 1],
+          [1, 1, -1],
+          [-1, 1, -1],
+          [-1, 1, 1],
+          [-1, 1, 1],
+          [-1, 1, -1],
+          [-1, -1, -1],
+          [-1, -1, 1],
+          [-1, -1, -1],
+          [1, -1, -1],
+          [1, -1, 1],
+          [-1, -1, 1],
+          [1, -1, -1],
+          [-1, -1, -1],
+          [-1, 1, -1],
+          [1, 1, -1]
+        ].flat()
+      );
+      this.vertexNormals = new Float32Array(
+        [
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, 0, -1],
+          [0, 0, -1],
+          [0, 0, -1],
+          [0, 0, -1]
+        ].flat()
+      );
+      this.vertexColors = new Float32Array(
+        [
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [1, 1, 0],
+          [1, 1, 0],
+          [1, 1, 0],
+          [1, 1, 0],
+          [1, 0, 1],
+          [1, 0, 1],
+          [1, 0, 1],
+          [1, 0, 1],
+          [0, 1, 1],
+          [0, 1, 1],
+          [0, 1, 1],
+          [0, 1, 1]
+        ].flat()
+      );
+      this.vertexTexCoords = new Float32Array(
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [0, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [1, 0]
+        ].flat()
+      );
+      this.triangleIndices = new Uint8Array(
+        [
+          [0, 1, 2],
+          [0, 2, 3],
+          [4, 5, 6],
+          [4, 6, 7],
+          [8, 9, 10],
+          [8, 10, 11],
+          [12, 13, 14],
+          [12, 14, 15],
+          [16, 17, 18],
+          [16, 18, 19],
+          [20, 21, 22],
+          [20, 22, 23]
+        ].flat()
+      );
     }
   };
 
@@ -6191,7 +6196,7 @@
   var main = () => {
     systemContext.coreSetup = () => {
       if (coreRenderContext.mainCanvas) {
-        new RenderSystem3DRegister(coreRenderContext.mainCanvas).register(
+        new WebGLRenderPipelineRegister(coreRenderContext.mainCanvas).register(
           mainWorld
         );
       }
@@ -6208,23 +6213,23 @@
       mainWorld.registerSystem(MainCameraInitSystem);
     });
     systemContext.editorStart = () => {
-      var _a;
       mainWorld.createEntity("Editor Main Camera").addComponent(TransformData3D, {
         position: new Vector3(0, 0, -10)
       }).addComponent(PerspectiveCameraData3D, {
         fov: Math.PI / 2
       }).addComponent(MainCameraTag);
       if (coreRenderContext.mainCanvas) {
-        new EditorSystem3DRegister(coreRenderContext.mainCanvas).register(
+        new EditorSystemWebGLRegister(coreRenderContext.mainCanvas).register(
           mainWorld
         );
       }
-      mainWorld.createEntity("WebGL Render Target").addComponent(MeshRenderData3D, {
-        material: new Material(
-          (_a = coreRenderContext.mainCanvas) == null ? void 0 : _a.getContext("webgl"),
-          default_vert_default,
-          default_frag_default
-        )
+      const mat = new MaterialDescriptor(default_vert_default, default_frag_default);
+      const mesh = new CubeMesh();
+      mainWorld.createEntity("WebGL Render Target").addComponent(TransformData3D, {
+        position: new Vector3(0, 0, 0)
+      }).addComponent(MeshRenderData3D, {
+        materialDesc: mat,
+        mesh
       });
       try {
         mainWorld.registerSystem(EditorCamTagAppendSystem);
@@ -6621,6 +6626,311 @@
       components: [TransformData2D]
     }
   });
+
+  // white-dwarf/src/Core/Render/System/Canvas3DRenderer.ts
+  var Canvas3DRenderer = class extends System {
+    constructor() {
+      super(...arguments);
+      this.worldToCamera = mat4_exports.create();
+      this.cameraToScreen = mat4_exports.create();
+    }
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.canvasContext = this.mainCanvas.getContext(
+        "2d"
+      );
+    }
+    execute(delta, time) {
+      if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length === 0) {
+        throw new Error("Main camera not found.");
+      } else if (this.queries.perspectiveMainCamera.results.length + this.queries.orthographicMainCamera.results.length > 1) {
+        throw new Error("More than one main camera found.");
+      }
+    }
+    orthographicWorldToCamera(camTransform, camData) {
+      const worldToCamera = mat4_exports.create();
+      mat4_exports.invert(worldToCamera, this.objectToWorld(camTransform));
+      const orthographic = mat4_exports.create();
+      mat4_exports.ortho(
+        orthographic,
+        camData.left,
+        camData.right,
+        camData.bottom,
+        camData.top,
+        camData.near,
+        camData.far
+      );
+      mat4_exports.multiply(worldToCamera, orthographic, worldToCamera);
+      return worldToCamera;
+    }
+    perspectiveWorldToCamera(camTransform, camData) {
+      const worldToCamera = mat4_exports.create();
+      mat4_exports.invert(worldToCamera, this.objectToWorld(camTransform));
+      const perspective2 = mat4_exports.create();
+      mat4_exports.perspective(
+        perspective2,
+        camData.fov,
+        camData.aspect,
+        camData.near,
+        camData.far
+      );
+      mat4_exports.multiply(worldToCamera, perspective2, worldToCamera);
+      return worldToCamera;
+    }
+    objectToWorld(transform, dropScale = false) {
+      const objectToWorld = mat4_exports.create();
+      if (dropScale) {
+        mat4_exports.fromRotationTranslation(
+          objectToWorld,
+          transform.rotation.value,
+          transform.position.value
+        );
+      } else {
+        mat4_exports.fromRotationTranslationScale(
+          objectToWorld,
+          transform.rotation.value,
+          transform.position.value,
+          transform.scale.value
+        );
+      }
+      return objectToWorld;
+    }
+    generateCameraToScreenMatrix() {
+      this.cameraToScreen = mat4_exports.create();
+      mat4_exports.fromTranslation(this.cameraToScreen, [
+        this.mainCanvas.width / 2,
+        this.mainCanvas.height / 2,
+        0
+      ]);
+      mat4_exports.scale(this.cameraToScreen, this.cameraToScreen, [
+        this.mainCanvas.width,
+        this.mainCanvas.height,
+        1
+      ]);
+    }
+    generateWorldToCameraMatrix() {
+      const canvasSize = vec2_exports.fromValues(
+        this.mainCanvas.width,
+        this.mainCanvas.height
+      );
+      if (this.queries.perspectiveMainCamera.results.length > 0) {
+        const camera = this.queries.perspectiveMainCamera.results[0];
+        const cameraTransform = camera.getComponent(
+          TransformData3D
+        );
+        const cameraPerspective = camera.getMutableComponent(
+          PerspectiveCameraData3D
+        );
+        cameraPerspective.aspect = canvasSize[0] / canvasSize[1];
+        this.worldToCamera = this.perspectiveWorldToCamera(
+          cameraTransform,
+          cameraPerspective
+        );
+      } else {
+      }
+    }
+    drawLine(startPoint, endPoint, color, lineWidth) {
+      if (startPoint[2] > 1 && endPoint[2] > 1) {
+        this.canvasContext.strokeStyle = color;
+        this.canvasContext.lineWidth = lineWidth;
+        this.canvasContext.beginPath();
+        this.canvasContext.moveTo(startPoint[0], startPoint[1]);
+        this.canvasContext.lineTo(endPoint[0], endPoint[1]);
+        this.canvasContext.stroke();
+      }
+    }
+  };
+  Canvas3DRenderer.queries = {
+    perspectiveMainCamera: {
+      components: [MainCameraTag, PerspectiveCameraData3D, TransformData3D]
+    },
+    orthographicMainCamera: {
+      components: [MainCameraTag, OrthographicCameraData3D, TransformData3D]
+    }
+  };
+
+  // white-dwarf/src/Editor/System/EditorViewPort3DSystem.ts
+  var moveControlThreshold = 30;
+  var _EditorViewPort3DSystem = class extends Canvas3DRenderer {
+    constructor() {
+      super(...arguments);
+      this.mousePosition = vec2_exports.create();
+      this.mouseDelta = vec2_exports.create();
+      this.mouseInCanvas = true;
+      this.highlightAxis = null;
+      this.movingAxis = null;
+    }
+    init(attributes) {
+      super.init(attributes);
+      this.mainCanvas.addEventListener("mousemove", (event) => {
+        this.mousePosition = this.getMousePos(event);
+        vec2_exports.add(
+          this.mouseDelta,
+          this.mouseDelta,
+          vec2_exports.fromValues(event.movementX, event.movementY)
+        );
+      });
+      this.mainCanvas.addEventListener("mouseenter", () => {
+        this.mouseInCanvas = true;
+      });
+      this.mainCanvas.addEventListener("mouseleave", () => {
+        this.mouseInCanvas = false;
+      });
+      this.mainCanvas.addEventListener("mousedown", (event) => {
+        if (event.button == 0) {
+          if (this.highlightAxis) {
+            this.movingAxis = this.highlightAxis;
+          }
+        }
+      });
+      this.mainCanvas.addEventListener("mouseup", (event) => {
+        if (event.button == 0) {
+          this.movingAxis = null;
+        }
+      });
+    }
+    execute(delta, time) {
+      var _a;
+      try {
+        super.execute(delta, time);
+      } catch (error) {
+        console.warn(error);
+        return;
+      }
+      this.generateWorldToCameraMatrix();
+      this.generateCameraToScreenMatrix();
+      if (editorControlContext.controlMode == 1 /* Move */ && _EditorViewPort3DSystem.inspectTransform && !((_a = _EditorViewPort3DSystem.inspectEntity) == null ? void 0 : _a.hasComponent(EditorSceneCamTag))) {
+        const objectToWorld = this.objectToWorld(
+          _EditorViewPort3DSystem.inspectTransform,
+          true
+        );
+        const objectToScreen = mat4_exports.create();
+        mat4_exports.multiply(objectToScreen, this.worldToCamera, objectToWorld);
+        mat4_exports.multiply(objectToScreen, this.cameraToScreen, objectToScreen);
+        this.drawAxis(objectToScreen);
+        const startPoint = vec3_exports.create();
+        vec3_exports.transformMat4(startPoint, [0, 0, 0], objectToScreen);
+        const endPointX = vec3_exports.create();
+        vec3_exports.transformMat4(endPointX, [1, 0, 0], objectToScreen);
+        const endPointY = vec3_exports.create();
+        vec3_exports.transformMat4(endPointY, [0, 1, 0], objectToScreen);
+        const endPointZ = vec3_exports.create();
+        vec3_exports.transformMat4(endPointZ, [0, 0, 1], objectToScreen);
+        if (this.mouseInCanvas) {
+          const xDistance = vec2_exports.distance(
+            this.mousePosition,
+            vec2_exports.fromValues(endPointX[0], endPointX[1])
+          );
+          const yDistance = vec2_exports.distance(
+            this.mousePosition,
+            vec2_exports.fromValues(endPointY[0], endPointY[1])
+          );
+          const zDistance = vec2_exports.distance(
+            this.mousePosition,
+            vec2_exports.fromValues(endPointZ[0], endPointZ[1])
+          );
+          const minDistance = Math.min(xDistance, yDistance, zDistance);
+          if (minDistance < moveControlThreshold) {
+            if (minDistance == xDistance) {
+              this.canvasContext.strokeStyle = "red";
+              this.canvasContext.beginPath();
+              this.canvasContext.arc(
+                endPointX[0],
+                endPointX[1],
+                moveControlThreshold,
+                0,
+                2 * Math.PI
+              );
+              this.canvasContext.stroke();
+              this.highlightAxis = "x";
+            } else if (minDistance == yDistance) {
+              this.canvasContext.strokeStyle = "green";
+              this.canvasContext.beginPath();
+              this.canvasContext.arc(
+                endPointY[0],
+                endPointY[1],
+                moveControlThreshold,
+                0,
+                2 * Math.PI
+              );
+              this.canvasContext.stroke();
+              this.highlightAxis = "y";
+            } else if (minDistance == zDistance) {
+              this.canvasContext.strokeStyle = "blue";
+              this.canvasContext.beginPath();
+              this.canvasContext.arc(
+                endPointZ[0],
+                endPointZ[1],
+                moveControlThreshold,
+                0,
+                2 * Math.PI
+              );
+              this.canvasContext.stroke();
+              this.highlightAxis = "z";
+            }
+          } else {
+            this.highlightAxis = null;
+          }
+          if (this.movingAxis) {
+            switch (this.movingAxis) {
+              case "x":
+                this.moveAxis(endPointX, startPoint, 0);
+                break;
+              case "y":
+                this.moveAxis(endPointY, startPoint, 1);
+                break;
+              case "z":
+                this.moveAxis(endPointZ, startPoint, 2);
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
+      vec2_exports.set(this.mouseDelta, 0, 0);
+    }
+    moveAxis(axisEndPoint, startPoint, axisIndex) {
+      var _a;
+      const axisDir = vec2_exports.create();
+      vec2_exports.sub(
+        axisDir,
+        vec2_exports.fromValues(axisEndPoint[0], axisEndPoint[1]),
+        vec2_exports.fromValues(startPoint[0], startPoint[1])
+      );
+      let axisMove = vec2_exports.dot(
+        axisDir,
+        vec2_exports.fromValues(this.mouseDelta[0], this.mouseDelta[1])
+      );
+      axisMove = axisMove / Math.pow(vec2_exports.length(axisDir), 2);
+      if (_EditorViewPort3DSystem.inspectTransform) {
+        _EditorViewPort3DSystem.inspectTransform.position.value[axisIndex] += axisMove;
+        (_a = _EditorViewPort3DSystem.inspectEntity) == null ? void 0 : _a.getMutableComponent(
+          TransformData3D
+        );
+      }
+    }
+    drawAxis(objectToScreen) {
+      const startPoint = vec3_exports.create();
+      vec3_exports.transformMat4(startPoint, [0, 0, 0], objectToScreen);
+      const endPointX = vec3_exports.create();
+      vec3_exports.transformMat4(endPointX, [1, 0, 0], objectToScreen);
+      const endPointY = vec3_exports.create();
+      vec3_exports.transformMat4(endPointY, [0, 1, 0], objectToScreen);
+      const endPointZ = vec3_exports.create();
+      vec3_exports.transformMat4(endPointZ, [0, 0, 1], objectToScreen);
+      this.drawLine(startPoint, endPointX, "red", 1);
+      this.drawLine(startPoint, endPointY, "green", 1);
+      this.drawLine(startPoint, endPointZ, "blue", 1);
+    }
+    getMousePos(event) {
+      const rect = this.mainCanvas.getBoundingClientRect();
+      return vec2_exports.fromValues(event.clientX - rect.left, event.clientY - rect.top);
+    }
+  };
+  var EditorViewPort3DSystem = _EditorViewPort3DSystem;
+  EditorViewPort3DSystem.inspectEntity = null;
+  EditorViewPort3DSystem.inspectTransform = null;
 
   // white-dwarf/src/Editor/System/EditorInspectorSystem.ts
   var updateEntityInspector = (entity) => {

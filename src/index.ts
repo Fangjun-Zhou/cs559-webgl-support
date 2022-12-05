@@ -5,7 +5,10 @@ import { systemContext } from "white-dwarf/src/Core/CoreSetup";
 import { TransformData3D } from "white-dwarf/src/Core/Locomotion/DataComponent/TransformData3D";
 import { MeshRenderData3D } from "white-dwarf/src/Core/Render/DataComponent/MeshRenderData3D";
 import { PerspectiveCameraData3D } from "white-dwarf/src/Core/Render/DataComponent/PerspectiveCameraData3D";
-import { Material } from "white-dwarf/src/Core/Render/Material";
+import {
+  Material,
+  MaterialDescriptor,
+} from "white-dwarf/src/Core/Render/Material";
 import { RenderSystem3DRegister } from "white-dwarf/src/Core/Render/RenderSystem3DRegister";
 import { MainCameraInitSystem } from "white-dwarf/src/Core/Render/System/MainCameraInitSystem";
 import { MainCameraTag } from "white-dwarf/src/Core/Render/TagComponent/MainCameraTag";
@@ -19,11 +22,16 @@ import { Vector3 } from "white-dwarf/src/Mathematics/Vector3";
 
 import default_vert from "white-dwarf/src/Core/Render/Shader/DefaultShader/default_vert.glsl";
 import default_frag from "white-dwarf/src/Core/Render/Shader/DefaultShader/default_frag.glsl";
+import { WebGLRenderPipelineRegister } from "white-dwarf/src/Core/Render/WebGLRenderPipelineRegister";
+import { EditorSystemWebGLRegister } from "white-dwarf/src/Editor/EditorSystemWebGLRegister";
+import { CubeMesh } from "white-dwarf/src/Utils/DefaultMeshes/CubeMesh";
+import { MeshBuffer } from "white-dwarf/src/Core/Render/MeshBuffer";
+import { OrthographicCameraData3D } from "white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D";
 
 export const main = () => {
   systemContext.coreSetup = () => {
     if (coreRenderContext.mainCanvas) {
-      new RenderSystem3DRegister(coreRenderContext.mainCanvas).register(
+      new WebGLRenderPipelineRegister(coreRenderContext.mainCanvas).register(
         mainWorld
       );
     }
@@ -60,20 +68,23 @@ export const main = () => {
 
     // Register Editor System.
     if (coreRenderContext.mainCanvas) {
-      new EditorSystem3DRegister(coreRenderContext.mainCanvas).register(
+      new EditorSystemWebGLRegister(coreRenderContext.mainCanvas).register(
         mainWorld
       );
     }
 
     // Add a entity with mesh render data.
+    const mat = new MaterialDescriptor(default_vert, default_frag);
+    const mesh = new CubeMesh();
+
     mainWorld
       .createEntity("WebGL Render Target")
+      .addComponent(TransformData3D, {
+        position: new Vector3(0, 0, 0),
+      })
       .addComponent(MeshRenderData3D, {
-        material: new Material(
-          coreRenderContext.mainCanvas?.getContext("webgl")!,
-          default_vert,
-          default_frag
-        ),
+        materialDesc: mat,
+        mesh: mesh,
       });
 
     // Setup editor scene camera.
