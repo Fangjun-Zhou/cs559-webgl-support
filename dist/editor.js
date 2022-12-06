@@ -4962,161 +4962,6 @@
     IComponent.register
   ], TransformData3D);
 
-  // white-dwarf/src/Core/Render/Shader/DefaultShader/default_vert.glsl
-  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
-
-  // white-dwarf/src/Core/Render/Shader/DefaultShader/default_frag.glsl
-  var default_frag_default = "precision highp float;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=fColor;}";
-
-  // white-dwarf/src/Core/Render/Material.ts
-  var Material = class {
-    constructor(glContext, vertexShaderSource, fragmentShaderSource, attributes = [], uniforms = [], textureSamplers = []) {
-      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
-      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
-      this.textureSamplers = [];
-      this.vertexShader = null;
-      this.fragmentShader = null;
-      this.shaderProgram = null;
-      this.attributeLocations = {};
-      this.uniformLocations = {};
-      this.samplerLocations = {};
-      this.glContext = glContext;
-      this.vertexSource = vertexShaderSource;
-      this.fragmentSource = fragmentShaderSource;
-      if (attributes.length) {
-        this.attributes = attributes;
-      }
-      if (uniforms.length) {
-        this.uniforms = uniforms;
-      }
-      if (textureSamplers.length) {
-        this.textureSamplers = textureSamplers;
-      }
-      if (!this.glContext) {
-        return;
-      }
-      this.compile(
-        glContext,
-        vertexShaderSource,
-        fragmentShaderSource,
-        this.attributes,
-        this.uniforms,
-        this.textureSamplers
-      );
-    }
-    compile(glContext, vertexShaderSource, fragmentShaderSource, attributes, uniforms, textureSamplers) {
-      this.vertexShader = glContext.createShader(
-        glContext.VERTEX_SHADER
-      );
-      if (!this.vertexShader) {
-        throw new Error("Failed to create vertex shader");
-      }
-      glContext.shaderSource(this.vertexShader, vertexShaderSource);
-      glContext.compileShader(this.vertexShader);
-      if (!glContext.getShaderParameter(this.vertexShader, glContext.COMPILE_STATUS)) {
-        throw new Error(glContext.getShaderInfoLog(this.vertexShader));
-      }
-      this.fragmentShader = glContext.createShader(
-        glContext.FRAGMENT_SHADER
-      );
-      if (!this.fragmentShader) {
-        throw new Error("Failed to create fragment shader");
-      }
-      glContext.shaderSource(this.fragmentShader, fragmentShaderSource);
-      glContext.compileShader(this.fragmentShader);
-      if (!glContext.getShaderParameter(
-        this.fragmentShader,
-        glContext.COMPILE_STATUS
-      )) {
-        throw new Error(
-          glContext.getShaderInfoLog(this.fragmentShader)
-        );
-      }
-      this.shaderProgram = glContext.createProgram();
-      if (!this.shaderProgram) {
-        throw new Error("Failed to create shader program");
-      }
-      glContext.attachShader(this.shaderProgram, this.vertexShader);
-      glContext.attachShader(this.shaderProgram, this.fragmentShader);
-      glContext.linkProgram(this.shaderProgram);
-      if (!glContext.getProgramParameter(this.shaderProgram, glContext.LINK_STATUS)) {
-        throw new Error("Failed to link shader program");
-      }
-      for (const attribute of attributes) {
-        const location = glContext.getAttribLocation(
-          this.shaderProgram,
-          attribute
-        );
-        this.attributeLocations[attribute] = location;
-        glContext.enableVertexAttribArray(location);
-      }
-      for (const uniform of uniforms) {
-        this.uniformLocations[uniform] = glContext.getUniformLocation(
-          this.shaderProgram,
-          uniform
-        );
-      }
-      for (let i = 0; i < textureSamplers.length; i++) {
-        const element = textureSamplers[i];
-        this.samplerLocations[element] = glContext.getUniformLocation(
-          this.shaderProgram,
-          element
-        );
-        glContext.uniform1i(this.samplerLocations[element], i);
-      }
-    }
-    use(glContext) {
-      glContext.useProgram(this.shaderProgram);
-    }
-  };
-  var MaterialDescriptor = class {
-    constructor(vertexSource = default_vert_default, fragmentSource = default_frag_default) {
-      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
-      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
-      this.textureSamplers = [];
-      this.vertexSource = vertexSource;
-      this.fragmentSource = fragmentSource;
-    }
-    copy(m) {
-      this.vertexSource = m.vertexSource;
-      this.fragmentSource = m.fragmentSource;
-      this.attributes = m.attributes;
-      this.uniforms = m.uniforms;
-      this.textureSamplers = m.textureSamplers;
-      return this;
-    }
-    clone() {
-      return new MaterialDescriptor().copy(this);
-    }
-  };
-  var MaterialDescriptorType = createType({
-    name: "MaterialDescriptor",
-    default: new MaterialDescriptor(),
-    copy: copyCopyable,
-    clone: cloneClonable
-  });
-
-  // white-dwarf/src/Core/Render/DataComponent/MeshRenderData3D.ts
-  var MeshRenderData3D = class extends Component {
-  };
-  MeshRenderData3D.schema = {
-    mesh: {
-      type: Types.Ref
-    },
-    meshBuffer: {
-      type: Types.Ref
-    },
-    materialDesc: {
-      type: MaterialDescriptorType
-    },
-    material: {
-      type: Types.Ref
-    }
-  };
-  MeshRenderData3D = __decorateClass([
-    IComponent.register
-  ], MeshRenderData3D);
-
   // white-dwarf/src/Core/Render/DataComponent/PerspectiveCameraData3D.ts
   var PerspectiveCameraData3D = class extends Component {
     constructor() {
@@ -5385,6 +5230,161 @@
     }
   };
 
+  // white-dwarf/src/Core/Render/Shader/DefaultShader/default_vert.glsl
+  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
+
+  // white-dwarf/src/Core/Render/Shader/DefaultShader/default_frag.glsl
+  var default_frag_default = "precision highp float;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=fColor;}";
+
+  // white-dwarf/src/Core/Render/Material.ts
+  var Material = class {
+    constructor(glContext, vertexShaderSource, fragmentShaderSource, attributes = [], uniforms = [], textureSamplers = []) {
+      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
+      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
+      this.textureSamplers = [];
+      this.vertexShader = null;
+      this.fragmentShader = null;
+      this.shaderProgram = null;
+      this.attributeLocations = {};
+      this.uniformLocations = {};
+      this.samplerLocations = {};
+      this.glContext = glContext;
+      this.vertexSource = vertexShaderSource;
+      this.fragmentSource = fragmentShaderSource;
+      if (attributes.length) {
+        this.attributes = attributes;
+      }
+      if (uniforms.length) {
+        this.uniforms = uniforms;
+      }
+      if (textureSamplers.length) {
+        this.textureSamplers = textureSamplers;
+      }
+      if (!this.glContext) {
+        return;
+      }
+      this.compile(
+        glContext,
+        vertexShaderSource,
+        fragmentShaderSource,
+        this.attributes,
+        this.uniforms,
+        this.textureSamplers
+      );
+    }
+    compile(glContext, vertexShaderSource, fragmentShaderSource, attributes, uniforms, textureSamplers) {
+      this.vertexShader = glContext.createShader(
+        glContext.VERTEX_SHADER
+      );
+      if (!this.vertexShader) {
+        throw new Error("Failed to create vertex shader");
+      }
+      glContext.shaderSource(this.vertexShader, vertexShaderSource);
+      glContext.compileShader(this.vertexShader);
+      if (!glContext.getShaderParameter(this.vertexShader, glContext.COMPILE_STATUS)) {
+        throw new Error(glContext.getShaderInfoLog(this.vertexShader));
+      }
+      this.fragmentShader = glContext.createShader(
+        glContext.FRAGMENT_SHADER
+      );
+      if (!this.fragmentShader) {
+        throw new Error("Failed to create fragment shader");
+      }
+      glContext.shaderSource(this.fragmentShader, fragmentShaderSource);
+      glContext.compileShader(this.fragmentShader);
+      if (!glContext.getShaderParameter(
+        this.fragmentShader,
+        glContext.COMPILE_STATUS
+      )) {
+        throw new Error(
+          glContext.getShaderInfoLog(this.fragmentShader)
+        );
+      }
+      this.shaderProgram = glContext.createProgram();
+      if (!this.shaderProgram) {
+        throw new Error("Failed to create shader program");
+      }
+      glContext.attachShader(this.shaderProgram, this.vertexShader);
+      glContext.attachShader(this.shaderProgram, this.fragmentShader);
+      glContext.linkProgram(this.shaderProgram);
+      if (!glContext.getProgramParameter(this.shaderProgram, glContext.LINK_STATUS)) {
+        throw new Error("Failed to link shader program");
+      }
+      for (const attribute of attributes) {
+        const location = glContext.getAttribLocation(
+          this.shaderProgram,
+          attribute
+        );
+        this.attributeLocations[attribute] = location;
+        glContext.enableVertexAttribArray(location);
+      }
+      for (const uniform of uniforms) {
+        this.uniformLocations[uniform] = glContext.getUniformLocation(
+          this.shaderProgram,
+          uniform
+        );
+      }
+      for (let i = 0; i < textureSamplers.length; i++) {
+        const element = textureSamplers[i];
+        this.samplerLocations[element] = glContext.getUniformLocation(
+          this.shaderProgram,
+          element
+        );
+        glContext.uniform1i(this.samplerLocations[element], i);
+      }
+    }
+    use(glContext) {
+      glContext.useProgram(this.shaderProgram);
+    }
+  };
+  var MaterialDescriptor = class {
+    constructor(vertexSource = default_vert_default, fragmentSource = default_frag_default) {
+      this.attributes = ["vPosition", "vNormal", "vColor", "vTexCoord"];
+      this.uniforms = ["uMV", "uP", "uMVn", "uMVP", "uDirLight"];
+      this.textureSamplers = [];
+      this.vertexSource = vertexSource;
+      this.fragmentSource = fragmentSource;
+    }
+    copy(m) {
+      this.vertexSource = m.vertexSource;
+      this.fragmentSource = m.fragmentSource;
+      this.attributes = m.attributes;
+      this.uniforms = m.uniforms;
+      this.textureSamplers = m.textureSamplers;
+      return this;
+    }
+    clone() {
+      return new MaterialDescriptor().copy(this);
+    }
+  };
+  var MaterialDescriptorType = createType({
+    name: "MaterialDescriptor",
+    default: new MaterialDescriptor(),
+    copy: copyCopyable,
+    clone: cloneClonable
+  });
+
+  // white-dwarf/src/Core/Render/DataComponent/MeshRenderData3D.ts
+  var MeshRenderData3D = class extends Component {
+  };
+  MeshRenderData3D.schema = {
+    mesh: {
+      type: Types.Ref
+    },
+    meshBuffer: {
+      type: Types.Ref
+    },
+    materialDesc: {
+      type: MaterialDescriptorType
+    },
+    material: {
+      type: Types.Ref
+    }
+  };
+  MeshRenderData3D = __decorateClass([
+    IComponent.register
+  ], MeshRenderData3D);
+
   // white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D.ts
   var OrthographicCameraData3D = class extends Component {
   };
@@ -5527,8 +5527,8 @@
         0
       ]);
       mat4_exports.scale(ndcToViewport, ndcToViewport, [
-        this.mainCanvas.width,
-        this.mainCanvas.height,
+        this.mainCanvas.width / 2,
+        -this.mainCanvas.height / 2,
         1
       ]);
       return ndcToViewport;
@@ -6194,7 +6194,7 @@
       this.deltaPos = new Vector3(0, 0, 0);
     }
     init(attributes) {
-      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.mainCanvas = attributes?.mainCanvas;
       this.canvasContext = this.mainCanvas.getContext(
         "2d"
       );
@@ -6357,6 +6357,7 @@
           tProjection
         );
       }
+      vec2_exports.set(this.mouseDelta, 0, 0);
     }
     getMousePos(event) {
       const rect = this.mainCanvas.getBoundingClientRect();
@@ -6370,7 +6371,7 @@
   EditorViewPortWebGLSystem.inspectTransform = null;
 
   // white-dwarf/src/Core/Render/Shader/EditorShader/point_vert.glsl
-  var point_vert_default = "attribute vec3 vPosition;attribute vec4 vColor;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;gl_Position=uMVP*vec4(vPosition,1.0);gl_PointSize=10.0;}";
+  var point_vert_default = "attribute vec3 vPosition;attribute float vSize;attribute vec4 vColor;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;gl_Position=uMVP*vec4(vPosition,1.0);gl_PointSize=vSize;}";
 
   // white-dwarf/src/Core/Render/Shader/EditorShader/point_frag.glsl
   var point_frag_default = "precision highp float;varying vec3 fPosition;varying vec4 fColor;void main(){gl_FragColor=fColor;}";
@@ -6382,11 +6383,13 @@
   var line_frag_default = "precision highp float;varying vec3 fPosition;varying vec4 fColor;void main(){gl_FragColor=fColor;}";
 
   // white-dwarf/src/Editor/System/EditorViewPortWebGlSystems/EditorViewPortWebGLTransformSystem.ts
+  var moveControlThreshold = 10;
   var EditorViewPortWebGLTransformSystem = class extends EditorViewPortWebGLSystem {
     constructor() {
       super(...arguments);
       this.pointAttributes = {
         vPosition: -1,
+        vSize: -1,
         vColor: -1
       };
       this.pointUniforms = {
@@ -6408,12 +6411,15 @@
       };
       this.axisShader = null;
       this.vertexPositionBufferItemSize = 3;
+      this.vertexSizeBufferItemSize = 1;
       this.vertexColorBufferItemSize = 4;
       this.pointVertexPositionBuffer = null;
+      this.pointVertexSizeBuffer = null;
       this.pointVertexColorBuffer = null;
       this.axisVertexPositionBuffer = null;
       this.axisVertexColorBuffer = null;
       this.axisTipVertexPositionBuffer = null;
+      this.axisTipVertexSizeBuffer = null;
       this.axisTipVertexColorBuffer = null;
       this.pointColor = [1, 1, 1, 1];
     }
@@ -6428,6 +6434,17 @@
       this.glContext.bufferData(
         this.glContext.ARRAY_BUFFER,
         pointVertices,
+        this.glContext.STATIC_DRAW
+      );
+      const pointSizes = new Float32Array([10]);
+      this.pointVertexSizeBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexSizeBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        pointSizes,
         this.glContext.STATIC_DRAW
       );
       const pointColors = new Float32Array(this.pointColor);
@@ -6498,6 +6515,17 @@
         axisTipVertices,
         this.glContext.STATIC_DRAW
       );
+      const axisTipSizes = new Float32Array([10, 10, 10]);
+      this.axisTipVertexSizeBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexSizeBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        axisTipSizes,
+        this.glContext.STATIC_DRAW
+      );
       const axisTipColors = new Float32Array(
         [
           [1, 0, 0, 1],
@@ -6538,6 +6566,83 @@
       mat4_exports.multiply(tMVP, tProjection, tMV);
       this.drawPoint(tMV, tProjection, tMVn, tMVP);
       this.drawAxis(tMV, tProjection, tMVn, tMVP);
+      const tNDCtoViewport = this.getNDCToViewportMatrix();
+      const tModelToViewport = mat4_exports.create();
+      mat4_exports.multiply(tModelToViewport, tNDCtoViewport, tMVP);
+      const startPoint = vec3_exports.transformMat4(
+        vec3_exports.create(),
+        [0, 0, 0],
+        tModelToViewport
+      );
+      const endPointX = vec3_exports.transformMat4(
+        vec3_exports.create(),
+        [1, 0, 0],
+        tModelToViewport
+      );
+      const endPointY = vec3_exports.transformMat4(
+        vec3_exports.create(),
+        [0, 1, 0],
+        tModelToViewport
+      );
+      const endPointZ = vec3_exports.transformMat4(
+        vec3_exports.create(),
+        [0, 0, 1],
+        tModelToViewport
+      );
+      if (this.mouseInCanvas) {
+        const xDistance = vec2_exports.distance(
+          this.mousePosition,
+          vec2_exports.fromValues(endPointX[0], endPointX[1])
+        );
+        const yDistance = vec2_exports.distance(
+          this.mousePosition,
+          vec2_exports.fromValues(endPointY[0], endPointY[1])
+        );
+        const zDistance = vec2_exports.distance(
+          this.mousePosition,
+          vec2_exports.fromValues(endPointZ[0], endPointZ[1])
+        );
+        const minDistance = Math.min(xDistance, yDistance, zDistance);
+        let axisTipSizes = new Float32Array([10, 10, 10]);
+        if (minDistance < moveControlThreshold) {
+          if (minDistance == xDistance) {
+            axisTipSizes = new Float32Array([20, 10, 10]);
+            this.highlightAxis = "x";
+          } else if (minDistance == yDistance) {
+            axisTipSizes = new Float32Array([10, 20, 10]);
+            this.highlightAxis = "y";
+          } else if (minDistance == zDistance) {
+            axisTipSizes = new Float32Array([10, 10, 20]);
+            this.highlightAxis = "z";
+          }
+        } else {
+          this.highlightAxis = null;
+        }
+        if (this.movingAxis) {
+          switch (this.movingAxis) {
+            case "x":
+              this.moveAxis(endPointX, startPoint, 0);
+              break;
+            case "y":
+              this.moveAxis(endPointY, startPoint, 1);
+              break;
+            case "z":
+              this.moveAxis(endPointZ, startPoint, 2);
+              break;
+            default:
+              break;
+          }
+        }
+        this.glContext.bindBuffer(
+          this.glContext.ARRAY_BUFFER,
+          this.axisTipVertexSizeBuffer
+        );
+        this.glContext.bufferData(
+          this.glContext.ARRAY_BUFFER,
+          axisTipSizes,
+          this.glContext.STATIC_DRAW
+        );
+      }
     }
     drawPoint(tMV, tProjection, tMVn, tMVP) {
       this.glContext.disable(this.glContext.DEPTH_TEST);
@@ -6550,6 +6655,18 @@
       this.glContext.vertexAttribPointer(
         this.pointAttributes.vPosition,
         this.vertexPositionBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexSizeBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vSize,
+        this.vertexSizeBufferItemSize,
         this.glContext.FLOAT,
         false,
         0,
@@ -6608,6 +6725,18 @@
       this.glContext.vertexAttribPointer(
         this.pointAttributes.vPosition,
         this.vertexPositionBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexSizeBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vSize,
+        this.vertexSizeBufferItemSize,
         this.glContext.FLOAT,
         false,
         0,
@@ -6709,6 +6838,26 @@
       }
       return shaderProgram;
     }
+    moveAxis(axisEndPoint, startPoint, axisIndex) {
+      var _a;
+      const axisDir = vec2_exports.create();
+      vec2_exports.sub(
+        axisDir,
+        vec2_exports.fromValues(axisEndPoint[0], axisEndPoint[1]),
+        vec2_exports.fromValues(startPoint[0], startPoint[1])
+      );
+      let axisMove = vec2_exports.dot(
+        axisDir,
+        vec2_exports.fromValues(this.mouseDelta[0], this.mouseDelta[1])
+      );
+      axisMove = axisMove / Math.pow(vec2_exports.length(axisDir), 2);
+      if (EditorViewPortWebGLSystem.inspectTransform) {
+        EditorViewPortWebGLSystem.inspectTransform.position.value[axisIndex] += axisMove;
+        (_a = EditorViewPortWebGLSystem.inspectEntity) == null ? void 0 : _a.getMutableComponent(
+          TransformData3D
+        );
+      }
+    }
   };
 
   // white-dwarf/src/Editor/EditorSystemWebGLRegister.ts
@@ -6739,12 +6888,17 @@
       if (props.worldObject) {
         WorldSerializer.deserializeWorld(mainWorld, props.worldObject);
       } else {
-        const worldObject = yield fetch("assets/cloth_world.json").then(
+        const worldObject = yield fetch("world.json").then(
           (response) => response.json()
         );
         WorldSerializer.deserializeWorld(mainWorld, worldObject);
       }
-      mainWorld.registerSystem(MainCameraInitSystem);
+      mainWorld.registerSystem(MainCameraInitSystem, {
+        priority: -100
+      });
+      mainWorld.registerSystem(Cam3DDragSystem, {
+        mainCanvas: coreRenderContext.mainCanvas
+      });
     });
     systemContext.editorStart = () => {
       mainWorld.createEntity("Editor Main Camera").addComponent(TransformData3D, {
@@ -6757,14 +6911,6 @@
           mainWorld
         );
       }
-      const mat = new MaterialDescriptor(default_vert_default, default_frag_default);
-      mainWorld.createEntity("WebGL Render Target").addComponent(TransformData3D, {
-        position: new Vector3(0, 0, 0)
-      }).addComponent(CubeMeshGeneratorData, {
-        size: new Vector3(1, 1, 1)
-      }).addComponent(MeshRenderData3D, {
-        materialDesc: mat
-      });
       try {
         mainWorld.registerSystem(EditorCamTagAppendSystem);
       } catch (error) {
@@ -7284,7 +7430,7 @@
   };
 
   // white-dwarf/src/Editor/System/EditorViewPort3DSystem.ts
-  var moveControlThreshold = 30;
+  var moveControlThreshold2 = 30;
   var _EditorViewPort3DSystem = class extends Canvas3DRenderer {
     constructor() {
       super(...arguments);
@@ -7364,14 +7510,14 @@
             vec2_exports.fromValues(endPointZ[0], endPointZ[1])
           );
           const minDistance = Math.min(xDistance, yDistance, zDistance);
-          if (minDistance < moveControlThreshold) {
+          if (minDistance < moveControlThreshold2) {
             if (minDistance == xDistance) {
               this.canvasContext.strokeStyle = "red";
               this.canvasContext.beginPath();
               this.canvasContext.arc(
                 endPointX[0],
                 endPointX[1],
-                moveControlThreshold,
+                moveControlThreshold2,
                 0,
                 2 * Math.PI
               );
@@ -7383,7 +7529,7 @@
               this.canvasContext.arc(
                 endPointY[0],
                 endPointY[1],
-                moveControlThreshold,
+                moveControlThreshold2,
                 0,
                 2 * Math.PI
               );
@@ -7395,7 +7541,7 @@
               this.canvasContext.arc(
                 endPointZ[0],
                 endPointZ[1],
-                moveControlThreshold,
+                moveControlThreshold2,
                 0,
                 2 * Math.PI
               );
@@ -7679,8 +7825,15 @@
     coreRenderContext.mainCanvas.oncontextmenu = () => false;
     mainWorld.onEntityChanged.push(updateEntityList);
     editorEventContext.onEntitySelected.push(updateEntityInspector);
+    const worldDataString = window.localStorage.getItem("worldData");
+    if (worldDataString) {
+      worldData = JSON.parse(worldDataString);
+    }
     coreSetup();
     systemContext.editorStart();
+    if (worldData) {
+      WorldSerializer.deserializeWorld(mainWorld, worldData);
+    }
     setupPlayButton();
     setupCreateEntityButton();
     setupDeserializeEntityInput();
@@ -7767,6 +7920,7 @@
             const data2 = (_a3 = e2.target) == null ? void 0 : _a3.result;
             if (data2) {
               worldData = JSON.parse(data2);
+              window.localStorage.setItem("worldData", JSON.stringify(worldData));
               editorStop();
             }
           };

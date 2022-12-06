@@ -28,6 +28,8 @@ import { CubeMesh } from "white-dwarf/src/Utils/DefaultMeshes/CubeMesh";
 import { MeshBuffer } from "white-dwarf/src/Core/Render/MeshBuffer";
 import { OrthographicCameraData3D } from "white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D";
 import { CubeMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent/MeshGenerator/CubeMeshGeneratorData";
+import { MainCameraInitTag } from "white-dwarf/src/Core/Render/TagComponent/MainCameraInitTag";
+import { Cam3DDragSystem } from "white-dwarf/src/Utils/System/Cam3DDragSystem";
 
 export const main = () => {
   systemContext.coreSetup = () => {
@@ -44,15 +46,22 @@ export const main = () => {
       WorldSerializer.deserializeWorld(mainWorld, props.worldObject);
     } else {
       // Read world.json.
-      const worldObject = (await fetch("assets/cloth_world.json").then(
-        (response) => response.json()
+      const worldObject = (await fetch("world.json").then((response) =>
+        response.json()
       )) as IWorldObject;
       // Deserialize the world.
       WorldSerializer.deserializeWorld(mainWorld, worldObject);
     }
 
     // Register main camera init system.
-    mainWorld.registerSystem(MainCameraInitSystem);
+    mainWorld.registerSystem(MainCameraInitSystem, {
+      priority: -100,
+    });
+
+    // Register game play systems.
+    mainWorld.registerSystem(Cam3DDragSystem, {
+      mainCanvas: coreRenderContext.mainCanvas,
+    });
   };
 
   systemContext.editorStart = () => {
@@ -74,20 +83,30 @@ export const main = () => {
       );
     }
 
-    // Add a entity with mesh render data.
-    const mat = new MaterialDescriptor(default_vert, default_frag);
+    // // Add a runtime cam.
+    // mainWorld
+    //   .createEntity("Runtime Main Camera")
+    //   .addComponent(TransformData3D, {
+    //     position: new Vector3(0, 0, -10),
+    //   })
+    //   .addComponent(PerspectiveCameraData3D, {
+    //     fov: Math.PI / 2,
+    //   })
+    //   .addComponent(MainCameraInitTag);
 
-    mainWorld
-      .createEntity("WebGL Render Target")
-      .addComponent(TransformData3D, {
-        position: new Vector3(0, 0, 0),
-      })
-      .addComponent(CubeMeshGeneratorData, {
-        size: new Vector3(1, 1, 1),
-      })
-      .addComponent(MeshRenderData3D, {
-        materialDesc: mat,
-      });
+    // // Add a entity with mesh render data.
+    // const mat = new MaterialDescriptor(default_vert, default_frag);
+    // mainWorld
+    //   .createEntity("WebGL Render Target")
+    //   .addComponent(TransformData3D, {
+    //     position: new Vector3(0, 0, 0),
+    //   })
+    //   .addComponent(CubeMeshGeneratorData, {
+    //     size: new Vector3(1, 1, 1),
+    //   })
+    //   .addComponent(MeshRenderData3D, {
+    //     materialDesc: mat,
+    //   });
 
     // Setup editor scene camera.
     try {
