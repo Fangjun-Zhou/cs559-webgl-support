@@ -27,6 +27,7 @@ import { EditorSystemWebGLRegister } from "white-dwarf/src/Editor/EditorSystemWe
 import { CubeMesh } from "white-dwarf/src/Utils/DefaultMeshes/CubeMesh";
 import { MeshBuffer } from "white-dwarf/src/Core/Render/MeshBuffer";
 import { OrthographicCameraData3D } from "white-dwarf/src/Core/Render/DataComponent/OrthographicCameraData3D";
+import { CubeMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent/MeshGenerator/CubeMeshGeneratorData";
 
 export const main = () => {
   systemContext.coreSetup = () => {
@@ -75,16 +76,17 @@ export const main = () => {
 
     // Add a entity with mesh render data.
     const mat = new MaterialDescriptor(default_vert, default_frag);
-    const mesh = new CubeMesh();
 
     mainWorld
       .createEntity("WebGL Render Target")
       .addComponent(TransformData3D, {
         position: new Vector3(0, 0, 0),
       })
+      .addComponent(CubeMeshGeneratorData, {
+        size: new Vector3(1, 1, 1),
+      })
       .addComponent(MeshRenderData3D, {
         materialDesc: mat,
-        mesh: mesh,
       });
 
     // Setup editor scene camera.

@@ -4963,7 +4963,7 @@
   ], TransformData3D);
 
   // white-dwarf/src/Core/Render/Shader/DefaultShader/default_vert.glsl
-  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(void){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
+  var default_vert_default = "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=vNormal;fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}";
 
   // white-dwarf/src/Core/Render/Shader/DefaultShader/default_frag.glsl
   var default_frag_default = "precision highp float;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){gl_FragColor=fColor;}";
@@ -5096,33 +5096,12 @@
     clone: cloneClonable
   });
 
-  // white-dwarf/src/Core/Render/Mesh.ts
-  var Mesh = class {
-    copy(m) {
-      this.vertexPositions = new Float32Array(m.vertexPositions);
-      this.vertexNormals = new Float32Array(m.vertexNormals);
-      this.vertexColors = new Float32Array(m.vertexColors);
-      this.vertexTexCoords = new Float32Array(m.vertexTexCoords);
-      this.triangleIndices = new Uint8Array(m.triangleIndices);
-      return this;
-    }
-    clone() {
-      return new Mesh().copy(this);
-    }
-  };
-  var MeshType = createType({
-    name: "Mesh",
-    default: new Mesh(),
-    copy: copyCopyable,
-    clone: cloneClonable
-  });
-
   // white-dwarf/src/Core/Render/DataComponent/MeshRenderData3D.ts
   var MeshRenderData3D = class extends Component {
   };
   MeshRenderData3D.schema = {
     mesh: {
-      type: MeshType
+      type: Types.Ref
     },
     meshBuffer: {
       type: Types.Ref
@@ -5448,7 +5427,7 @@
     }
     init(attributes) {
       this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
-      this.canvasContext = this.mainCanvas.getContext(
+      this.glContext = this.mainCanvas.getContext(
         "webgl"
       );
     }
@@ -5462,7 +5441,7 @@
         this.mainCanvas.width,
         this.mainCanvas.height
       );
-      this.canvasContext.viewport(0, 0, canvasSize[0], canvasSize[1]);
+      this.glContext.viewport(0, 0, canvasSize[0], canvasSize[1]);
       if (this.queries.perspectiveMainCamera.results.length > 0) {
         const camera = this.queries.perspectiveMainCamera.results[0];
         this.cameraTransform = camera.getComponent(
@@ -5601,79 +5580,79 @@
         mat3_exports.normalFromMat4(tMVn, tMV);
         const tMVP = mat4_exports.create();
         mat4_exports.multiply(tMVP, tProjection, tMV);
-        material.use(this.canvasContext);
-        this.canvasContext.uniformMatrix4fv(
+        material.use(this.glContext);
+        this.glContext.uniformMatrix4fv(
           material.uniformLocations.uMV,
           false,
           tMV
         );
-        this.canvasContext.uniformMatrix4fv(
+        this.glContext.uniformMatrix4fv(
           material.uniformLocations.uP,
           false,
           tProjection
         );
-        this.canvasContext.uniformMatrix3fv(
+        this.glContext.uniformMatrix3fv(
           material.uniformLocations.uMVn,
           false,
           tMVn
         );
-        this.canvasContext.uniformMatrix4fv(
+        this.glContext.uniformMatrix4fv(
           material.uniformLocations.uMVP,
           false,
           tMVP
         );
-        this.canvasContext.bindBuffer(
-          this.canvasContext.ARRAY_BUFFER,
+        this.glContext.bindBuffer(
+          this.glContext.ARRAY_BUFFER,
           meshBuffer.vertexPositionsBuffer
         );
-        this.canvasContext.vertexAttribPointer(
+        this.glContext.vertexAttribPointer(
           material.attributeLocations.vPosition,
           meshBuffer.bufferInfos.vertexPositions.itemSize,
-          this.canvasContext.FLOAT,
+          this.glContext.FLOAT,
           false,
           0,
           0
         );
-        this.canvasContext.bindBuffer(
-          this.canvasContext.ARRAY_BUFFER,
+        this.glContext.bindBuffer(
+          this.glContext.ARRAY_BUFFER,
           meshBuffer.vertexNormalsBuffer
         );
-        this.canvasContext.vertexAttribPointer(
+        this.glContext.vertexAttribPointer(
           material.attributeLocations.vNormal,
           meshBuffer.bufferInfos.vertexNormals.itemSize,
-          this.canvasContext.FLOAT,
+          this.glContext.FLOAT,
           false,
           0,
           0
         );
-        this.canvasContext.bindBuffer(
-          this.canvasContext.ARRAY_BUFFER,
+        this.glContext.bindBuffer(
+          this.glContext.ARRAY_BUFFER,
           meshBuffer.vertexColorsBuffer
         );
-        this.canvasContext.vertexAttribPointer(
+        this.glContext.vertexAttribPointer(
           material.attributeLocations.vColor,
           meshBuffer.bufferInfos.vertexColors.itemSize,
-          this.canvasContext.FLOAT,
+          this.glContext.FLOAT,
           false,
           0,
           0
         );
-        this.canvasContext.bindBuffer(
-          this.canvasContext.ARRAY_BUFFER,
+        this.glContext.bindBuffer(
+          this.glContext.ARRAY_BUFFER,
           meshBuffer.vertexTexCoordsBuffer
         );
-        this.canvasContext.vertexAttribPointer(
+        this.glContext.vertexAttribPointer(
           material.attributeLocations.vTexCoord,
           meshBuffer.bufferInfos.vertexTexCoords.itemSize,
-          this.canvasContext.FLOAT,
+          this.glContext.FLOAT,
           false,
           0,
           0
         );
-        this.canvasContext.drawElements(
-          this.canvasContext.TRIANGLES,
+        this.glContext.drawElements(
+          this.glContext.TRIANGLES,
           meshBuffer.bufferInfos.triangleIndices.numItems,
-          this.canvasContext.UNSIGNED_BYTE,
+          this.glContext.UNSIGNED_BYTE,
           0
         );
       });
@@ -5700,6 +5679,268 @@
       this.glContext.clear(
         this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT
       );
+    }
+  };
+
+  // white-dwarf/src/Core/Render/Mesh.ts
+  var Mesh = class {
+    copy(m) {
+      this.vertexPositions = new Float32Array(m.vertexPositions);
+      this.vertexNormals = new Float32Array(m.vertexNormals);
+      this.vertexColors = new Float32Array(m.vertexColors);
+      this.vertexTexCoords = new Float32Array(m.vertexTexCoords);
+      this.triangleIndices = new Uint8Array(m.triangleIndices);
+      return this;
+    }
+    clone() {
+      return new Mesh().copy(this);
+    }
+  };
+  var MeshType = createType({
+    name: "Mesh",
+    default: new Mesh(),
+    copy: copyCopyable,
+    clone: cloneClonable
+  });
+
+  // white-dwarf/src/Utils/DefaultMeshes/CubeMesh.ts
+  var CubeMesh = class extends Mesh {
+    constructor(x = 1, y = 1, z = 1) {
+      super();
+      this.vertexPositions = new Float32Array(
+        [
+          [1, 1, 1],
+          [-1, 1, 1],
+          [-1, -1, 1],
+          [1, -1, 1],
+          [1, 1, 1],
+          [1, -1, 1],
+          [1, -1, -1],
+          [1, 1, -1],
+          [1, 1, 1],
+          [1, 1, -1],
+          [-1, 1, -1],
+          [-1, 1, 1],
+          [-1, 1, 1],
+          [-1, 1, -1],
+          [-1, -1, -1],
+          [-1, -1, 1],
+          [-1, -1, -1],
+          [1, -1, -1],
+          [1, -1, 1],
+          [-1, -1, 1],
+          [1, -1, -1],
+          [-1, -1, -1],
+          [-1, 1, -1],
+          [1, 1, -1]
+        ].flat()
+      );
+      this.vertexNormals = new Float32Array(
+        [
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [0, 0, 1],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [0, 1, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [-1, 0, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, -1, 0],
+          [0, 0, -1],
+          [0, 0, -1],
+          [0, 0, -1],
+          [0, 0, -1]
+        ].flat()
+      );
+      this.vertexColors = new Float32Array(
+        [
+          [0, 0, 1, 1],
+          [0, 0, 1, 1],
+          [0, 0, 1, 1],
+          [0, 0, 1, 1],
+          [1, 0, 0, 1],
+          [1, 0, 0, 1],
+          [1, 0, 0, 1],
+          [1, 0, 0, 1],
+          [0, 1, 0, 1],
+          [0, 1, 0, 1],
+          [0, 1, 0, 1],
+          [0, 1, 0, 1],
+          [1, 1, 0, 1],
+          [1, 1, 0, 1],
+          [1, 1, 0, 1],
+          [1, 1, 0, 1],
+          [1, 0, 1, 1],
+          [1, 0, 1, 1],
+          [1, 0, 1, 1],
+          [1, 0, 1, 1],
+          [0, 1, 1, 1],
+          [0, 1, 1, 1],
+          [0, 1, 1, 1],
+          [0, 1, 1, 1]
+        ].flat()
+      );
+      this.vertexTexCoords = new Float32Array(
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [0, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+          [1, 0]
+        ].flat()
+      );
+      this.triangleIndices = new Uint8Array(
+        [
+          [0, 1, 2],
+          [0, 2, 3],
+          [4, 5, 6],
+          [4, 6, 7],
+          [8, 9, 10],
+          [8, 10, 11],
+          [12, 13, 14],
+          [12, 14, 15],
+          [16, 17, 18],
+          [16, 18, 19],
+          [20, 21, 22],
+          [20, 22, 23]
+        ].flat()
+      );
+      this.vertexPositions = new Float32Array(
+        [
+          [x, y, z],
+          [-x, y, z],
+          [-x, -y, z],
+          [x, -y, z],
+          [x, y, z],
+          [x, -y, z],
+          [x, -y, -z],
+          [x, y, -z],
+          [x, y, z],
+          [x, y, -z],
+          [-x, y, -z],
+          [-x, y, z],
+          [-x, y, z],
+          [-x, y, -z],
+          [-x, -y, -z],
+          [-x, -y, z],
+          [-x, -y, -z],
+          [x, -y, -z],
+          [x, -y, z],
+          [-x, -y, z],
+          [x, -y, -z],
+          [-x, -y, -z],
+          [-x, y, -z],
+          [x, y, -z]
+        ].flat()
+      );
+    }
+  };
+
+  // white-dwarf/src/Core/Render/DataComponent/MeshGenerator/CubeMeshGeneratorData.ts
+  var CubeMeshGeneratorData = class extends Component {
+    constructor() {
+      super(...arguments);
+      this.size = new Vector3(1, 1, 1);
+      this.useDefaultInspector = false;
+      this.onInspector = (componentDiv) => {
+        const sizeDiv = document.createElement("div");
+        sizeDiv.appendChild(document.createTextNode("Size"));
+        const [sizeVector3Div, setSize] = Vector3CustomEditor(
+          this.size,
+          (newValue) => {
+            this.size = newValue;
+            this.eventEmitter.emit(COMPONENT_CHANGE_EVENT, this);
+          }
+        );
+        sizeDiv.appendChild(sizeVector3Div);
+        this.eventEmitter.on(COMPONENT_CHANGE_EVENT, () => {
+          setSize(this.size);
+        });
+        componentDiv.appendChild(sizeDiv);
+      };
+    }
+  };
+  CubeMeshGeneratorData.schema = {
+    size: {
+      type: Vector3Type,
+      default: new Vector3(1, 1, 1)
+    }
+  };
+  CubeMeshGeneratorData = __decorateClass([
+    IComponent.register
+  ], CubeMeshGeneratorData);
+
+  // white-dwarf/src/Core/Render/System/MeshGeneratorSystems/CubeMeshGeneratorSystem.ts
+  var CubeMeshGeneratorSystem = class extends System {
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.canvasContext = this.mainCanvas.getContext(
+        "webgl"
+      );
+    }
+    execute(delta, time) {
+      var _a, _b;
+      (_a = this.queries.meshEntities.added) == null ? void 0 : _a.forEach((entity) => {
+        this.generateCubeMesh(entity);
+      });
+      (_b = this.queries.meshEntities.changed) == null ? void 0 : _b.forEach((entity) => {
+        this.generateCubeMesh(entity);
+      });
+    }
+    generateCubeMesh(entity) {
+      const meshGeneratorData = entity.getComponent(
+        CubeMeshGeneratorData
+      );
+      const meshRenderData = entity.getMutableComponent(
+        MeshRenderData3D
+      );
+      if (!meshGeneratorData) {
+        return;
+      }
+      meshRenderData.mesh = new CubeMesh(
+        meshGeneratorData.size.value[0],
+        meshGeneratorData.size.value[1],
+        meshGeneratorData.size.value[2]
+      );
+    }
+  };
+  CubeMeshGeneratorSystem.queries = {
+    meshEntities: {
+      components: [CubeMeshGeneratorData, MeshRenderData3D],
+      listen: {
+        added: true,
+        changed: true
+      }
     }
   };
 
@@ -5743,8 +5984,8 @@
         glContext.STATIC_DRAW
       );
       this.bufferInfos.vertexColors = {
-        itemSize: 3,
-        numItems: mesh.vertexColors.length / 3
+        itemSize: 4,
+        numItems: mesh.vertexColors.length / 4
       };
       this.vertexTexCoordsBuffer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexTexCoordsBuffer);
@@ -5800,6 +6041,9 @@
       const meshRenderData = entity.getMutableComponent(
         MeshRenderData3D
       );
+      if (!meshRenderData.mesh) {
+        return;
+      }
       meshRenderData.meshBuffer = new MeshBuffer(
         this.canvasContext,
         meshRenderData.mesh
@@ -5845,7 +6089,9 @@
   var WebGLRenderPipelineRegister = class {
     constructor(mainCanvas) {
       this.register = (world) => {
-        world.registerSystem(WebGLMeshCompiler, {
+        world.registerSystem(CubeMeshGeneratorSystem, {
+          mainCanvas: this.mainCanvas
+        }).registerSystem(WebGLMeshCompiler, {
           mainCanvas: this.mainCanvas
         });
         world.registerSystem(ClearCanvasWebGLSystem, {
@@ -6045,6 +6291,426 @@
     }
   };
 
+  // white-dwarf/src/Editor/System/EditorViewPortWebGlSystems/EditorViewPortWebGLSystem.ts
+  var _EditorViewPortWebGLSystem = class extends CanvasWebGLRenderer {
+    constructor() {
+      super(...arguments);
+      this.mousePosition = vec2_exports.create();
+      this.mouseDelta = vec2_exports.create();
+      this.mouseInCanvas = true;
+      this.highlightAxis = null;
+      this.movingAxis = null;
+    }
+    init(attributes) {
+      super.init(attributes);
+      this.mainCanvas.addEventListener("mousemove", (event) => {
+        this.mousePosition = this.getMousePos(event);
+        vec2_exports.add(
+          this.mouseDelta,
+          this.mouseDelta,
+          vec2_exports.fromValues(event.movementX, event.movementY)
+        );
+      });
+      this.mainCanvas.addEventListener("mouseenter", () => {
+        this.mouseInCanvas = true;
+      });
+      this.mainCanvas.addEventListener("mouseleave", () => {
+        this.mouseInCanvas = false;
+      });
+      this.mainCanvas.addEventListener("mousedown", (event) => {
+        if (event.button == 0) {
+          if (this.highlightAxis) {
+            this.movingAxis = this.highlightAxis;
+          }
+        }
+      });
+      this.mainCanvas.addEventListener("mouseup", (event) => {
+        if (event.button == 0) {
+          this.movingAxis = null;
+        }
+      });
+    }
+    execute(delta, time) {
+      var _a;
+      try {
+        super.execute(delta, time);
+      } catch (error) {
+        console.warn(error);
+        return;
+      }
+      const tView = this.getViewMatrix(this.cameraTransform);
+      let tProjection;
+      if (this.cameraPerspective) {
+        tProjection = this.getPerspectiveProjectionMatrix(this.cameraPerspective);
+      } else if (this.cameraOrthographic) {
+        tProjection = this.getOrthographicProjectionMatrix(
+          this.cameraOrthographic
+        );
+      } else {
+        throw new Error("No camera found.");
+      }
+      if (editorControlContext.controlMode == 1 /* Move */ && _EditorViewPortWebGLSystem.inspectTransform && !((_a = _EditorViewPortWebGLSystem.inspectEntity) == null ? void 0 : _a.hasComponent(EditorSceneCamTag))) {
+        this.drawInspectEntity(
+          _EditorViewPortWebGLSystem.inspectEntity,
+          _EditorViewPortWebGLSystem.inspectTransform,
+          tView,
+          tProjection
+        );
+      }
+    }
+    getMousePos(event) {
+      const rect = this.mainCanvas.getBoundingClientRect();
+      return vec2_exports.fromValues(event.clientX - rect.left, event.clientY - rect.top);
+    }
+    drawInspectEntity(entity, transform, tView, tProjection) {
+    }
+  };
+  var EditorViewPortWebGLSystem = _EditorViewPortWebGLSystem;
+  EditorViewPortWebGLSystem.inspectEntity = null;
+  EditorViewPortWebGLSystem.inspectTransform = null;
+
+  // white-dwarf/src/Core/Render/Shader/EditorShader/point_vert.glsl
+  var point_vert_default = "attribute vec3 vPosition;attribute vec4 vColor;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;gl_Position=uMVP*vec4(vPosition,1.0);gl_PointSize=10.0;}";
+
+  // white-dwarf/src/Core/Render/Shader/EditorShader/point_frag.glsl
+  var point_frag_default = "precision highp float;varying vec3 fPosition;varying vec4 fColor;void main(){gl_FragColor=fColor;}";
+
+  // white-dwarf/src/Core/Render/Shader/EditorShader/line_vert.glsl
+  var line_vert_default = "attribute vec3 vPosition;attribute vec4 vColor;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;gl_Position=uMVP*vec4(vPosition,1.0);}";
+
+  // white-dwarf/src/Core/Render/Shader/EditorShader/line_frag.glsl
+  var line_frag_default = "precision highp float;varying vec3 fPosition;varying vec4 fColor;void main(){gl_FragColor=fColor;}";
+
+  // white-dwarf/src/Editor/System/EditorViewPortWebGlSystems/EditorViewPortWebGLTransformSystem.ts
+  var EditorViewPortWebGLTransformSystem = class extends EditorViewPortWebGLSystem {
+    constructor() {
+      super(...arguments);
+      this.pointAttributes = {
+        vPosition: -1,
+        vColor: -1
+      };
+      this.pointUniforms = {
+        uMV: null,
+        uP: null,
+        uMVn: null,
+        uMVP: null
+      };
+      this.pointShader = null;
+      this.axisAttributes = {
+        vPosition: -1,
+        vColor: -1
+      };
+      this.axisUniforms = {
+        uMV: null,
+        uP: null,
+        uMVn: null,
+        uMVP: null
+      };
+      this.axisShader = null;
+      this.vertexPositionBufferItemSize = 3;
+      this.vertexColorBufferItemSize = 4;
+      this.pointVertexPositionBuffer = null;
+      this.pointVertexColorBuffer = null;
+      this.axisVertexPositionBuffer = null;
+      this.axisVertexColorBuffer = null;
+      this.axisTipVertexPositionBuffer = null;
+      this.axisTipVertexColorBuffer = null;
+      this.pointColor = [1, 1, 1, 1];
+    }
+    init(attributes) {
+      super.init(attributes);
+      const pointVertices = new Float32Array([0, 0, 0]);
+      this.pointVertexPositionBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexPositionBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        pointVertices,
+        this.glContext.STATIC_DRAW
+      );
+      const pointColors = new Float32Array(this.pointColor);
+      this.pointVertexColorBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexColorBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        pointColors,
+        this.glContext.STATIC_DRAW
+      );
+      const axisVertices = new Float32Array(
+        [
+          [0, 0, 0],
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 1, 0],
+          [0, 0, 0],
+          [0, 0, 1]
+        ].flat()
+      );
+      this.axisVertexPositionBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisVertexPositionBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        axisVertices,
+        this.glContext.STATIC_DRAW
+      );
+      const axisColors = new Float32Array(
+        [
+          [1, 0, 0, 1],
+          [1, 0, 0, 1],
+          [0, 0, 1, 1],
+          [0, 0, 1, 1],
+          [0, 1, 0, 1],
+          [0, 1, 0, 1]
+        ].flat()
+      );
+      this.axisVertexColorBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisVertexColorBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        axisColors,
+        this.glContext.STATIC_DRAW
+      );
+      const axisTipVertices = new Float32Array(
+        [
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 0, 1]
+        ].flat()
+      );
+      this.axisTipVertexPositionBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexPositionBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        axisTipVertices,
+        this.glContext.STATIC_DRAW
+      );
+      const axisTipColors = new Float32Array(
+        [
+          [1, 0, 0, 1],
+          [0, 0, 1, 1],
+          [0, 1, 0, 1]
+        ].flat()
+      );
+      this.axisTipVertexColorBuffer = this.glContext.createBuffer();
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexColorBuffer
+      );
+      this.glContext.bufferData(
+        this.glContext.ARRAY_BUFFER,
+        axisTipColors,
+        this.glContext.STATIC_DRAW
+      );
+      this.pointShader = this.compileShader(
+        point_vert_default,
+        point_frag_default,
+        this.pointAttributes,
+        this.pointUniforms
+      );
+      this.axisShader = this.compileShader(
+        line_vert_default,
+        line_frag_default,
+        this.axisAttributes,
+        this.axisUniforms
+      );
+    }
+    drawInspectEntity(entity, transform, tView, tProjection) {
+      const tModel = this.getModelMatrix(transform, true);
+      const tMV = mat4_exports.create();
+      mat4_exports.multiply(tMV, tView, tModel);
+      const tMVn = mat3_exports.create();
+      mat3_exports.normalFromMat4(tMVn, tMV);
+      const tMVP = mat4_exports.create();
+      mat4_exports.multiply(tMVP, tProjection, tMV);
+      this.drawPoint(tMV, tProjection, tMVn, tMVP);
+      this.drawAxis(tMV, tProjection, tMVn, tMVP);
+    }
+    drawPoint(tMV, tProjection, tMVn, tMVP) {
+      this.glContext.disable(this.glContext.DEPTH_TEST);
+      this.glContext.useProgram(this.pointShader);
+      this.setUniforms(this.pointUniforms, tMV, tProjection, tMVn, tMVP);
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexPositionBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vPosition,
+        this.vertexPositionBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.pointVertexColorBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vColor,
+        this.vertexColorBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.drawArrays(this.glContext.POINTS, 0, 1);
+      this.glContext.enable(this.glContext.DEPTH_TEST);
+    }
+    drawAxis(tMV, tProjection, tMVn, tMVP) {
+      this.glContext.disable(this.glContext.DEPTH_TEST);
+      this.glContext.useProgram(this.axisShader);
+      this.setUniforms(this.axisUniforms, tMV, tProjection, tMVn, tMVP);
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisVertexPositionBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.axisAttributes.vPosition,
+        this.vertexPositionBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisVertexColorBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.axisAttributes.vColor,
+        this.vertexColorBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.drawArrays(this.glContext.LINES, 0, 6);
+      this.glContext.useProgram(this.pointShader);
+      this.setUniforms(this.pointUniforms, tMV, tProjection, tMVn, tMVP);
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexPositionBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vPosition,
+        this.vertexPositionBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.bindBuffer(
+        this.glContext.ARRAY_BUFFER,
+        this.axisTipVertexColorBuffer
+      );
+      this.glContext.vertexAttribPointer(
+        this.pointAttributes.vColor,
+        this.vertexColorBufferItemSize,
+        this.glContext.FLOAT,
+        false,
+        0,
+        0
+      );
+      this.glContext.drawArrays(this.glContext.POINTS, 0, 3);
+      this.glContext.enable(this.glContext.DEPTH_TEST);
+    }
+    setUniforms(uniforms, tMV, tProjection, tMVn, tMVP) {
+      this.glContext.uniformMatrix4fv(
+        uniforms.uMV,
+        false,
+        tMV
+      );
+      this.glContext.uniformMatrix4fv(
+        uniforms.uP,
+        false,
+        tProjection
+      );
+      this.glContext.uniformMatrix3fv(
+        uniforms.uMVn,
+        false,
+        tMVn
+      );
+      this.glContext.uniformMatrix4fv(
+        uniforms.uMVP,
+        false,
+        tMVP
+      );
+    }
+    compileShader(vertexSource, fragmentSource, attributes, uniforms) {
+      const pointVertexShader = this.glContext.createShader(
+        this.glContext.VERTEX_SHADER
+      );
+      if (!pointVertexShader) {
+        throw new Error("Failed to create point vertex shader.");
+      }
+      this.glContext.shaderSource(pointVertexShader, vertexSource);
+      this.glContext.compileShader(pointVertexShader);
+      if (!this.glContext.getShaderParameter(
+        pointVertexShader,
+        this.glContext.COMPILE_STATUS
+      )) {
+        throw new Error(
+          this.glContext.getShaderInfoLog(pointVertexShader)
+        );
+      }
+      const pointFragmentShader = this.glContext.createShader(
+        this.glContext.FRAGMENT_SHADER
+      );
+      if (!pointFragmentShader) {
+        throw new Error("Failed to create point fragment shader.");
+      }
+      this.glContext.shaderSource(pointFragmentShader, fragmentSource);
+      this.glContext.compileShader(pointFragmentShader);
+      if (!this.glContext.getShaderParameter(
+        pointFragmentShader,
+        this.glContext.COMPILE_STATUS
+      )) {
+        throw new Error(
+          this.glContext.getShaderInfoLog(pointFragmentShader)
+        );
+      }
+      const shaderProgram = this.glContext.createProgram();
+      if (!shaderProgram) {
+        throw new Error("Failed to create point shader program.");
+      }
+      this.glContext.attachShader(shaderProgram, pointVertexShader);
+      this.glContext.attachShader(shaderProgram, pointFragmentShader);
+      this.glContext.linkProgram(shaderProgram);
+      if (!this.glContext.getProgramParameter(
+        shaderProgram,
+        this.glContext.LINK_STATUS
+      )) {
+        throw new Error(
+          this.glContext.getProgramInfoLog(shaderProgram)
+        );
+      }
+      for (const key in attributes) {
+        const location = this.glContext.getAttribLocation(shaderProgram, key);
+        attributes[key] = location;
+        this.glContext.enableVertexAttribArray(location);
+      }
+      for (const key in uniforms) {
+        const location = this.glContext.getUniformLocation(shaderProgram, key);
+        uniforms[key] = location;
+      }
+      return shaderProgram;
+    }
+  };
+
   // white-dwarf/src/Editor/EditorSystemWebGLRegister.ts
   var EditorSystemWebGLRegister = class {
     constructor(mainCanvas) {
@@ -6052,143 +6718,11 @@
         world.registerSystem(Cam3DDragSystem, {
           mainCanvas: this.mainCanvas
         });
+        world.registerSystem(EditorViewPortWebGLTransformSystem, {
+          mainCanvas: this.mainCanvas
+        });
       };
       this.mainCanvas = mainCanvas;
-    }
-  };
-
-  // white-dwarf/src/Utils/DefaultMeshes/CubeMesh.ts
-  var CubeMesh = class extends Mesh {
-    constructor() {
-      super(...arguments);
-      this.vertexPositions = new Float32Array(
-        [
-          [1, 1, 1],
-          [-1, 1, 1],
-          [-1, -1, 1],
-          [1, -1, 1],
-          [1, 1, 1],
-          [1, -1, 1],
-          [1, -1, -1],
-          [1, 1, -1],
-          [1, 1, 1],
-          [1, 1, -1],
-          [-1, 1, -1],
-          [-1, 1, 1],
-          [-1, 1, 1],
-          [-1, 1, -1],
-          [-1, -1, -1],
-          [-1, -1, 1],
-          [-1, -1, -1],
-          [1, -1, -1],
-          [1, -1, 1],
-          [-1, -1, 1],
-          [1, -1, -1],
-          [-1, -1, -1],
-          [-1, 1, -1],
-          [1, 1, -1]
-        ].flat()
-      );
-      this.vertexNormals = new Float32Array(
-        [
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, 0, -1],
-          [0, 0, -1],
-          [0, 0, -1],
-          [0, 0, -1]
-        ].flat()
-      );
-      this.vertexColors = new Float32Array(
-        [
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [1, 1, 0],
-          [1, 1, 0],
-          [1, 1, 0],
-          [1, 1, 0],
-          [1, 0, 1],
-          [1, 0, 1],
-          [1, 0, 1],
-          [1, 0, 1],
-          [0, 1, 1],
-          [0, 1, 1],
-          [0, 1, 1],
-          [0, 1, 1]
-        ].flat()
-      );
-      this.vertexTexCoords = new Float32Array(
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [0, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [1, 0]
-        ].flat()
-      );
-      this.triangleIndices = new Uint8Array(
-        [
-          [0, 1, 2],
-          [0, 2, 3],
-          [4, 5, 6],
-          [4, 6, 7],
-          [8, 9, 10],
-          [8, 10, 11],
-          [12, 13, 14],
-          [12, 14, 15],
-          [16, 17, 18],
-          [16, 18, 19],
-          [20, 21, 22],
-          [20, 22, 23]
-        ].flat()
-      );
     }
   };
 
@@ -6224,12 +6758,12 @@
         );
       }
       const mat = new MaterialDescriptor(default_vert_default, default_frag_default);
-      const mesh = new CubeMesh();
       mainWorld.createEntity("WebGL Render Target").addComponent(TransformData3D, {
         position: new Vector3(0, 0, 0)
+      }).addComponent(CubeMeshGeneratorData, {
+        size: new Vector3(1, 1, 1)
       }).addComponent(MeshRenderData3D, {
-        materialDesc: mat,
-        mesh
+        materialDesc: mat
       });
       try {
         mainWorld.registerSystem(EditorCamTagAppendSystem);
@@ -6950,15 +7484,19 @@
         EditorViewPort3DSystem.inspectEntity.removeComponent(EditorSelectedTag);
       }
       EditorViewPort3DSystem.inspectEntity = entity;
+      EditorViewPortWebGLSystem.inspectEntity = entity;
       if (EditorViewPort3DSystem.inspectEntity) {
         EditorViewPort3DSystem.inspectEntity.addComponent(EditorSelectedTag);
       }
-      EditorViewPort3DSystem.inspectTransform = entity.getMutableComponent(
+      const inspectTransform = entity.getMutableComponent(
         TransformData3D
       );
+      EditorViewPort3DSystem.inspectTransform = inspectTransform;
+      EditorViewPortWebGLSystem.inspectTransform = inspectTransform;
     } else {
       EditorViewPort2DSystem.inspectTransform = null;
       EditorViewPort3DSystem.inspectTransform = null;
+      EditorViewPortWebGLSystem.inspectTransform = null;
     }
     displayEntityInspector(entity);
   };
