@@ -1,0 +1,179 @@
+{
+  "entities": [
+    {
+      "name": "Runtime Main Camera",
+      "id": 1,
+      "components": {
+        "TransformData3D": {
+          "position": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": -10
+            }
+          },
+          "rotation": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 1
+            }
+          },
+          "scale": {
+            "value": {
+              "0": 1,
+              "1": 1,
+              "2": 1
+            }
+          }
+        },
+        "PerspectiveCameraData3D": {
+          "fov": 1.5707963267948966,
+          "aspect": 1,
+          "near": 0.1,
+          "far": 1000
+        },
+        "MainCameraInitTag": {}
+      }
+    },
+    {
+      "name": "Planet 1",
+      "id": 2,
+      "components": {
+        "TransformData3D": {
+          "position": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 0
+            }
+          },
+          "rotation": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 1
+            }
+          },
+          "scale": {
+            "value": {
+              "0": 1,
+              "1": 1,
+              "2": 1
+            }
+          }
+        },
+        "MeshRenderData3D": {
+          "materialDesc": {
+            "attributes": [
+              "vPosition",
+              "vNormal",
+              "vColor",
+              "vTexCoord"
+            ],
+            "uniforms": [
+              "uM",
+              "uV",
+              "uP",
+              "uMV",
+              "uMVn",
+              "uMVP",
+              "uDirLight"
+            ],
+            "textureSamplers": [],
+            "vertexSource": "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=normalize(uMVn*vNormal);fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}",
+            "fragmentSource": "precision highp float;uniform mat4 uV;uniform vec3 uDirLight;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;const vec4 baseColor=vec4(1,1,1,1);const vec4 ambientColor=vec4(1,0,0,1);const float ambientIntensity=0.1;const float specularExp=128.0;const vec4 dirLightColor=vec4(1,1,0.5,1);const float dirLightIntensity=1.0;const vec4 pointLightColor=vec4(0,1,0,1);const float pointLightIntensity=1.0;const float pointLightDistance=2.0;const float pointLightRotateSpeed=15.0;const bool useFresnelEffect=true;const vec4 fresnelColor=vec4(1,1,0,1);const float fresnelExp=5.0;const float fresnelThreshold=0.3;vec2 getDiffuseSpecular(vec3 l,vec3 h,vec3 n,float i){float diffuseIntensity=max(0.0,dot(n,l));diffuseIntensity=diffuseIntensity*i;float specularIntensity=max(0.0,pow(max(0.0,dot(n,h)),specularExp));specularIntensity=specularIntensity*i;return vec2(diffuseIntensity,specularIntensity);}void main(){vec3 n=normalize(fNormal);vec3 e=normalize(-fPosition);vec4 ambientLight=ambientColor*ambientIntensity;vec3 dirLight=(uV*vec4(uDirLight,0)).xyz;vec3 sl=normalize(dirLight);vec3 sh=normalize(e+sl);vec2 sds=getDiffuseSpecular(sl,sh,n,dirLightIntensity);vec4 sunLight=dirLightColor*sds.x;sunLight=sunLight+dirLightColor*sds.y;vec4 color=vec4(0,0,0,1);color=color+baseColor*ambientLight;color=color+baseColor*sunLight;gl_FragColor=color;}"
+          }
+        },
+        "IcosphereMeshGeneratorData": {
+          "radius": 5,
+          "subdivisions": 2,
+          "flatNormal": false
+        },
+        "EulerVelocityData3D": {
+          "velocity": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 0
+            }
+          }
+        },
+        "MassData": {
+          "mass": 100000000000
+        }
+      }
+    },
+    {
+      "name": "Planet 2",
+      "id": 4,
+      "components": {
+        "TransformData3D": {
+          "position": {
+            "value": {
+              "0": -11,
+              "1": 0,
+              "2": 0
+            }
+          },
+          "rotation": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 0,
+              "3": 1
+            }
+          },
+          "scale": {
+            "value": {
+              "0": 1,
+              "1": 1,
+              "2": 1
+            }
+          }
+        },
+        "MeshRenderData3D": {
+          "materialDesc": {
+            "attributes": [
+              "vPosition",
+              "vNormal",
+              "vColor",
+              "vTexCoord"
+            ],
+            "uniforms": [
+              "uM",
+              "uV",
+              "uP",
+              "uMV",
+              "uMVn",
+              "uMVP",
+              "uDirLight"
+            ],
+            "textureSamplers": [],
+            "vertexSource": "attribute vec3 vPosition;attribute vec3 vNormal;attribute vec4 vColor;attribute vec2 vTexCoord;uniform mat4 uMV;uniform mat4 uP;uniform mat3 uMVn;uniform mat4 uMVP;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;void main(){fPosition=(uMV*vec4(vPosition,1.0)).xyz;fColor=vColor;fNormal=normalize(uMVn*vNormal);fTexCoord=vTexCoord;gl_Position=uMVP*vec4(vPosition,1.0);}",
+            "fragmentSource": "precision highp float;uniform mat4 uV;uniform vec3 uDirLight;varying vec3 fPosition;varying vec4 fColor;varying vec3 fNormal;varying vec2 fTexCoord;const vec4 baseColor=vec4(1,1,1,1);const vec4 ambientColor=vec4(1,0,0,1);const float ambientIntensity=0.1;const float specularExp=128.0;const vec4 dirLightColor=vec4(1,1,0.5,1);const float dirLightIntensity=1.0;const vec4 pointLightColor=vec4(0,1,0,1);const float pointLightIntensity=1.0;const float pointLightDistance=2.0;const float pointLightRotateSpeed=15.0;const bool useFresnelEffect=true;const vec4 fresnelColor=vec4(1,1,0,1);const float fresnelExp=5.0;const float fresnelThreshold=0.3;vec2 getDiffuseSpecular(vec3 l,vec3 h,vec3 n,float i){float diffuseIntensity=max(0.0,dot(n,l));diffuseIntensity=diffuseIntensity*i;float specularIntensity=max(0.0,pow(max(0.0,dot(n,h)),specularExp));specularIntensity=specularIntensity*i;return vec2(diffuseIntensity,specularIntensity);}void main(){vec3 n=normalize(fNormal);vec3 e=normalize(-fPosition);vec4 ambientLight=ambientColor*ambientIntensity;vec3 dirLight=(uV*vec4(uDirLight,0)).xyz;vec3 sl=normalize(dirLight);vec3 sh=normalize(e+sl);vec2 sds=getDiffuseSpecular(sl,sh,n,dirLightIntensity);vec4 sunLight=dirLightColor*sds.x;sunLight=sunLight+dirLightColor*sds.y;vec4 color=vec4(0,0,0,1);color=color+baseColor*ambientLight;color=color+baseColor*sunLight;gl_FragColor=color;}"
+          }
+        },
+        "IcosphereMeshGeneratorData": {
+          "radius": 1,
+          "subdivisions": 2,
+          "flatNormal": false
+        },
+        "EulerVelocityData3D": {
+          "velocity": {
+            "value": {
+              "0": 0,
+              "1": 0,
+              "2": 3
+            }
+          }
+        },
+        "MassData": {
+          "mass": 100
+        }
+      }
+    }
+  ]
+}
