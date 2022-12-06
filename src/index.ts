@@ -31,6 +31,14 @@ import { CubeMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent
 import { MainCameraInitTag } from "white-dwarf/src/Core/Render/TagComponent/MainCameraInitTag";
 import { Cam3DDragSystem } from "white-dwarf/src/Utils/System/Cam3DDragSystem";
 import { IcosphereMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent/MeshGenerator/IcosphereMeshGeneratorData";
+import { VerletVelocity3DMoveSystem } from "white-dwarf/src/Core/Physics/Systems/VerletVelocity3DMoveSystem";
+import { EulerVelocity3DMoveSystem } from "white-dwarf/src/Core/Physics/Systems/EulerVelocity3DMoveSystem";
+import { EulerVelocityPlanetGravitySystem } from "./Systems/EulerVelocityPlanetGravitySystem";
+import {
+  EditorControl,
+  editorControlContext,
+  editorUIContext,
+} from "white-dwarf/src/Editor/EditorContext";
 
 export const main = () => {
   systemContext.coreSetup = () => {
@@ -54,15 +62,20 @@ export const main = () => {
       WorldSerializer.deserializeWorld(mainWorld, worldObject);
     }
 
+    editorControlContext.controlMode = EditorControl.View;
+
     // Register main camera init system.
     mainWorld.registerSystem(MainCameraInitSystem, {
       priority: -100,
     });
 
     // Register game play systems.
-    mainWorld.registerSystem(Cam3DDragSystem, {
-      mainCanvas: coreRenderContext.mainCanvas,
-    });
+    mainWorld
+      .registerSystem(Cam3DDragSystem, {
+        mainCanvas: coreRenderContext.mainCanvas,
+      })
+      .registerSystem(EulerVelocity3DMoveSystem)
+      .registerSystem(EulerVelocityPlanetGravitySystem);
   };
 
   systemContext.editorStart = () => {
@@ -84,35 +97,35 @@ export const main = () => {
       );
     }
 
-    // Add a runtime cam.
-    mainWorld
-      .createEntity("Runtime Main Camera")
-      .addComponent(TransformData3D, {
-        position: new Vector3(0, 0, -10),
-      })
-      .addComponent(PerspectiveCameraData3D, {
-        fov: Math.PI / 2,
-      })
-      .addComponent(MainCameraInitTag);
+    // // Add a runtime cam.
+    // mainWorld
+    //   .createEntity("Runtime Main Camera")
+    //   .addComponent(TransformData3D, {
+    //     position: new Vector3(0, 0, -10),
+    //   })
+    //   .addComponent(PerspectiveCameraData3D, {
+    //     fov: Math.PI / 2,
+    //   })
+    //   .addComponent(MainCameraInitTag);
 
-    // Add a entity with mesh render data.
-    const mat = new MaterialDescriptor(default_vert, default_frag);
-    mainWorld
-      .createEntity("WebGL Render Target")
-      .addComponent(TransformData3D, {
-        position: new Vector3(0, 0, 0),
-      })
-      // .addComponent(CubeMeshGeneratorData, {
-      //   size: new Vector3(1, 1, 1),
-      // })
-      .addComponent(IcosphereMeshGeneratorData, {
-        radius: 2,
-        subdivisions: 1,
-        flatNormal: true,
-      })
-      .addComponent(MeshRenderData3D, {
-        materialDesc: mat,
-      });
+    // // Add a entity with mesh render data.
+    // const mat = new MaterialDescriptor(default_vert, default_frag);
+    // mainWorld
+    //   .createEntity("WebGL Render Target")
+    //   .addComponent(TransformData3D, {
+    //     position: new Vector3(0, 0, 0),
+    //   })
+    //   // .addComponent(CubeMeshGeneratorData, {
+    //   //   size: new Vector3(1, 1, 1),
+    //   // })
+    //   .addComponent(IcosphereMeshGeneratorData, {
+    //     radius: 3,
+    //     subdivisions: 2,
+    //     flatNormal: true,
+    //   })
+    //   .addComponent(MeshRenderData3D, {
+    //     materialDesc: mat,
+    //   });
 
     // Setup editor scene camera.
     try {
