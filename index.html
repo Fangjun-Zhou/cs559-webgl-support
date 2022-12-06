@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>CS559 HW7 Fangjun Zhou</title>
+    <link
+      href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .grow {
+        flex-grow: 1;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grow"></div>
+
+    <h1>CS559 HW7 Gravity Simulation</h1>
+    <h2>Fangjun Zhou</h2>
+
+    <h2>EDITOR INSTRUCTION</h2>
+    <p>
+      You can directly open White Dwarf Editor below without hosting any server.
+      But to open a world file, you need to download the world files from the
+      link below and open it in the editor.
+    </p>
+
+    <p>
+      1. Download <a href="dist/world.json">world.json</a>. <br />
+      2. Open the downloaded file in the editor. <br />
+      3. Right click to rotate views. Use scroll wheel to zoom in and out. Use
+      middle click to move camera. <br />
+      4. Change the mode on the top right corner from "move" to "view", now you
+      can use left click to move the camera.
+    </p>
+
+    <p>
+      Mesh Subdivision Usage: <br />
+      1. Create a new entity. <br />
+      2. Add TransformData3D, IcosphereMeshGeneratorData, and MeshRenderData3D
+      to the entity. <br />
+      3. Change the flatNormal field to true for flattened normals. <br />
+      4. Change the subdivision field to the number of subdivisions. <br />
+      5. Change the radius field to the radius of the sphere. <br />
+      6. You may not change the subdivision number too large. Set to 3 or 4 is
+      recommended. <br />
+    </p>
+
+    <h2><a href="dist/editor.html">White Dwarf Editor</a></h2>
+
+    <h2>RELEASE INSTRUCTION</h2>
+    <p>
+      The following release versions need file permission. So you may not be
+      able to access it locally. You can host a server via VSCode Live Server or
+      Python http server. OR YOU CAN ACCESS THE ONLINE VERSION
+      <a
+        href="https://fangjun-zhou.github.io/cs559-webgl-support/dist/release.html"
+        >HERE</a
+      >!!!
+    </p>
+    <p>
+      Use left click to move camera.<br />
+      Right click to rotate views. <br />
+      Use scroll wheel to zoom in and out.
+    </p>
+
+    <h2><a href="dist/release.html">Gravity Simulation</a></h2>
+
+    <div class="grow"></div>
+  </body>
+</html>
