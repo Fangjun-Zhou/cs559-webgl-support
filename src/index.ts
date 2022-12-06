@@ -30,6 +30,7 @@ import { OrthographicCameraData3D } from "white-dwarf/src/Core/Render/DataCompon
 import { CubeMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent/MeshGenerator/CubeMeshGeneratorData";
 import { MainCameraInitTag } from "white-dwarf/src/Core/Render/TagComponent/MainCameraInitTag";
 import { Cam3DDragSystem } from "white-dwarf/src/Utils/System/Cam3DDragSystem";
+import { IcosphereMeshGeneratorData } from "white-dwarf/src/Core/Render/DataComponent/MeshGenerator/IcosphereMeshGeneratorData";
 
 export const main = () => {
   systemContext.coreSetup = () => {
@@ -101,8 +102,13 @@ export const main = () => {
       .addComponent(TransformData3D, {
         position: new Vector3(0, 0, 0),
       })
-      .addComponent(CubeMeshGeneratorData, {
-        size: new Vector3(1, 1, 1),
+      // .addComponent(CubeMeshGeneratorData, {
+      //   size: new Vector3(1, 1, 1),
+      // })
+      .addComponent(IcosphereMeshGeneratorData, {
+        radius: 2,
+        subdivisions: 1,
+        flatNormal: true,
       })
       .addComponent(MeshRenderData3D, {
         materialDesc: mat,

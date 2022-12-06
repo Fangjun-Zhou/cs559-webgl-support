@@ -72,9 +72,9 @@
     });
   };
 
-  // white-dwarf/node_modules/events/events.js
+  // node_modules/events/events.js
   var require_events = __commonJS({
-    "white-dwarf/node_modules/events/events.js"(exports, module) {
+    "node_modules/events/events.js"(exports, module) {
       "use strict";
       var R = typeof Reflect === "object" ? Reflect : null;
       var ReflectApply = R && typeof R.apply === "function" ? R.apply : function ReflectApply2(target, receiver, args) {
@@ -444,9 +444,9 @@
     }
   });
 
-  // white-dwarf/node_modules/js-file-download/file-download.js
+  // node_modules/js-file-download/file-download.js
   var require_file_download = __commonJS({
-    "white-dwarf/node_modules/js-file-download/file-download.js"(exports, module) {
+    "node_modules/js-file-download/file-download.js"(exports, module) {
       module.exports = function(data2, filename, mime, bom) {
         var blobData = typeof bom !== "undefined" ? [bom, data2] : [data2];
         var blob = new Blob(blobData, { type: mime || "application/octet-stream" });
@@ -472,7 +472,7 @@
     }
   });
 
-  // white-dwarf/node_modules/ecsy-wd/src/Utils.js
+  // node_modules/ecsy-wd/src/Utils.js
   function queryKey(Components) {
     var ids = [];
     for (var n = 0; n < Components.length; n++) {
@@ -495,7 +495,7 @@
     return typeof T === "object" && T.Component._typeId !== void 0 || T.isComponent && T._typeId !== void 0;
   }
 
-  // white-dwarf/node_modules/ecsy-wd/src/SystemManager.js
+  // node_modules/ecsy-wd/src/SystemManager.js
   var SystemManager = class {
     constructor(world) {
       this._systems = [];
@@ -593,7 +593,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/ObjectPool.js
+  // node_modules/ecsy-wd/src/ObjectPool.js
   var ObjectPool = class {
     constructor(T, initialSize) {
       this.freeList = [];
@@ -634,7 +634,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/EventDispatcher.js
+  // node_modules/ecsy-wd/src/EventDispatcher.js
   var EventDispatcher = class {
     constructor() {
       this._listeners = {};
@@ -679,7 +679,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/Query.js
+  // node_modules/ecsy-wd/src/Query.js
   var Query = class {
     constructor(Components, manager) {
       this.Components = [];
@@ -748,7 +748,7 @@
   Query.prototype.ENTITY_REMOVED = "Query#ENTITY_REMOVED";
   Query.prototype.COMPONENT_CHANGED = "Query#COMPONENT_CHANGED";
 
-  // white-dwarf/node_modules/ecsy-wd/src/QueryManager.js
+  // node_modules/ecsy-wd/src/QueryManager.js
   var QueryManager = class {
     constructor(world) {
       this._world = world;
@@ -804,7 +804,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/Component.js
+  // node_modules/ecsy-wd/src/Component.js
   var import_events = __toESM(require_events());
   var Component = class {
     constructor(props) {
@@ -886,12 +886,12 @@
   };
   var COMPONENT_CHANGE_EVENT = "COMPONENT_CHANGE_EVENT";
 
-  // white-dwarf/node_modules/ecsy-wd/src/SystemStateComponent.js
+  // node_modules/ecsy-wd/src/SystemStateComponent.js
   var SystemStateComponent = class extends Component {
   };
   SystemStateComponent.isSystemStateComponent = true;
 
-  // white-dwarf/node_modules/ecsy-wd/src/EntityManager.js
+  // node_modules/ecsy-wd/src/EntityManager.js
   var EntityPool = class extends ObjectPool {
     constructor(entityManager, entityClass, initialSize) {
       super(entityClass, void 0);
@@ -1120,7 +1120,7 @@
   var COMPONENT_ADDED = "EntityManager#COMPONENT_ADDED";
   var COMPONENT_REMOVE = "EntityManager#COMPONENT_REMOVE";
 
-  // white-dwarf/node_modules/ecsy-wd/src/ComponentManager.js
+  // node_modules/ecsy-wd/src/ComponentManager.js
   var ComponentManager = class {
     constructor() {
       this.Components = [];
@@ -1175,10 +1175,10 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/Version.js
+  // node_modules/ecsy-wd/src/Version.js
   var Version2 = "0.3.1";
 
-  // white-dwarf/node_modules/ecsy-wd/src/WrapImmutableComponent.js
+  // node_modules/ecsy-wd/src/WrapImmutableComponent.js
   var proxyMap = /* @__PURE__ */ new WeakMap();
   var proxyHandler = {
     set(target, prop) {
@@ -1201,7 +1201,7 @@
     return wrappedComponent;
   }
 
-  // white-dwarf/node_modules/ecsy-wd/src/Entity.js
+  // node_modules/ecsy-wd/src/Entity.js
   var Entity = class {
     constructor(entityManager) {
       this._entityManager = entityManager || null;
@@ -1311,7 +1311,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/World.js
+  // node_modules/ecsy-wd/src/World.js
   var DEFAULT_OPTIONS = {
     entityPoolSize: 0,
     entityClass: Entity
@@ -1392,7 +1392,7 @@
     }
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/System.js
+  // node_modules/ecsy-wd/src/System.js
   var System = class {
     canExecute() {
       if (this._mandatoryQueries.length === 0)
@@ -1566,7 +1566,7 @@
     return this.displayName || this.name;
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/TagComponent.js
+  // node_modules/ecsy-wd/src/TagComponent.js
   var TagComponent = class extends Component {
     constructor() {
       super(false);
@@ -1574,7 +1574,7 @@
   };
   TagComponent.isTagComponent = true;
 
-  // white-dwarf/node_modules/ecsy-wd/src/Types.js
+  // node_modules/ecsy-wd/src/Types.js
   var copyValue = (src) => src;
   var cloneValue = (src) => src;
   var copyArray = (src, dest) => {
@@ -1657,7 +1657,7 @@
     })
   };
 
-  // white-dwarf/node_modules/ecsy-wd/src/RemoteDevTools/utils.js
+  // node_modules/ecsy-wd/src/RemoteDevTools/utils.js
   function generateId(length5) {
     var result = "";
     var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -1674,7 +1674,7 @@
     (document.head || document.documentElement).appendChild(script2);
   }
 
-  // white-dwarf/node_modules/ecsy-wd/src/RemoteDevTools/index.js
+  // node_modules/ecsy-wd/src/RemoteDevTools/index.js
   function hookConsoleAndErrors(connection2) {
     var wrapFunctions = ["error", "warning", "log"];
     wrapFunctions.forEach((key) => {
@@ -1895,7 +1895,7 @@
     physicsWorld = new World();
   };
 
-  // white-dwarf/node_modules/gl-matrix/esm/common.js
+  // node_modules/gl-matrix/esm/common.js
   var EPSILON = 1e-6;
   var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
   var RANDOM = Math.random;
@@ -1909,7 +1909,7 @@
       return Math.sqrt(y);
     };
 
-  // white-dwarf/node_modules/gl-matrix/esm/mat3.js
+  // node_modules/gl-matrix/esm/mat3.js
   var mat3_exports = {};
   __export(mat3_exports, {
     add: () => add,
@@ -2341,7 +2341,7 @@
   var mul = multiply;
   var sub = subtract;
 
-  // white-dwarf/node_modules/gl-matrix/esm/mat4.js
+  // node_modules/gl-matrix/esm/mat4.js
   var mat4_exports = {};
   __export(mat4_exports, {
     add: () => add2,
@@ -3593,7 +3593,7 @@
   var mul2 = multiply2;
   var sub2 = subtract2;
 
-  // white-dwarf/node_modules/gl-matrix/esm/quat.js
+  // node_modules/gl-matrix/esm/quat.js
   var quat_exports = {};
   __export(quat_exports, {
     add: () => add5,
@@ -3637,7 +3637,7 @@
     str: () => str4
   });
 
-  // white-dwarf/node_modules/gl-matrix/esm/vec3.js
+  // node_modules/gl-matrix/esm/vec3.js
   var vec3_exports = {};
   __export(vec3_exports, {
     add: () => add3,
@@ -4021,7 +4021,7 @@
     };
   }();
 
-  // white-dwarf/node_modules/gl-matrix/esm/vec4.js
+  // node_modules/gl-matrix/esm/vec4.js
   function create4() {
     var out = new ARRAY_TYPE(4);
     if (ARRAY_TYPE != Float32Array) {
@@ -4157,7 +4157,7 @@
     };
   }();
 
-  // white-dwarf/node_modules/gl-matrix/esm/quat.js
+  // node_modules/gl-matrix/esm/quat.js
   function create5() {
     var out = new ARRAY_TYPE(4);
     if (ARRAY_TYPE != Float32Array) {
@@ -4450,7 +4450,7 @@
     };
   }();
 
-  // white-dwarf/node_modules/gl-matrix/esm/vec2.js
+  // node_modules/gl-matrix/esm/vec2.js
   var vec2_exports = {};
   __export(vec2_exports, {
     add: () => add6,
@@ -5613,7 +5613,7 @@
         );
         this.glContext.uniform3fv(
           material.uniformLocations.uDirLight,
-          [1, 0.5, 0.3]
+          [1, 0.5, -1.3]
         );
         this.glContext.bindBuffer(
           this.glContext.ARRAY_BUFFER,
@@ -5696,190 +5696,6 @@
     }
   };
 
-  // white-dwarf/src/Core/Render/Mesh.ts
-  var Mesh = class {
-    copy(m) {
-      this.vertexPositions = new Float32Array(m.vertexPositions);
-      this.vertexNormals = new Float32Array(m.vertexNormals);
-      this.vertexColors = new Float32Array(m.vertexColors);
-      this.vertexTexCoords = new Float32Array(m.vertexTexCoords);
-      this.triangleIndices = new Uint8Array(m.triangleIndices);
-      return this;
-    }
-    clone() {
-      return new Mesh().copy(this);
-    }
-  };
-  var MeshType = createType({
-    name: "Mesh",
-    default: new Mesh(),
-    copy: copyCopyable,
-    clone: cloneClonable
-  });
-
-  // white-dwarf/src/Utils/DefaultMeshes/CubeMesh.ts
-  var CubeMesh = class extends Mesh {
-    constructor(x = 1, y = 1, z = 1) {
-      super();
-      this.vertexPositions = new Float32Array(
-        [
-          [1, 1, 1],
-          [-1, 1, 1],
-          [-1, -1, 1],
-          [1, -1, 1],
-          [1, 1, 1],
-          [1, -1, 1],
-          [1, -1, -1],
-          [1, 1, -1],
-          [1, 1, 1],
-          [1, 1, -1],
-          [-1, 1, -1],
-          [-1, 1, 1],
-          [-1, 1, 1],
-          [-1, 1, -1],
-          [-1, -1, -1],
-          [-1, -1, 1],
-          [-1, -1, -1],
-          [1, -1, -1],
-          [1, -1, 1],
-          [-1, -1, 1],
-          [1, -1, -1],
-          [-1, -1, -1],
-          [-1, 1, -1],
-          [1, 1, -1]
-        ].flat()
-      );
-      this.vertexNormals = new Float32Array(
-        [
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [0, 0, 1],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [1, 0, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [0, 1, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [-1, 0, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, -1, 0],
-          [0, 0, -1],
-          [0, 0, -1],
-          [0, 0, -1],
-          [0, 0, -1]
-        ].flat()
-      );
-      this.vertexColors = new Float32Array(
-        [
-          [0, 0, 1, 1],
-          [0, 0, 1, 1],
-          [0, 0, 1, 1],
-          [0, 0, 1, 1],
-          [1, 0, 0, 1],
-          [1, 0, 0, 1],
-          [1, 0, 0, 1],
-          [1, 0, 0, 1],
-          [0, 1, 0, 1],
-          [0, 1, 0, 1],
-          [0, 1, 0, 1],
-          [0, 1, 0, 1],
-          [1, 1, 0, 1],
-          [1, 1, 0, 1],
-          [1, 1, 0, 1],
-          [1, 1, 0, 1],
-          [1, 0, 1, 1],
-          [1, 0, 1, 1],
-          [1, 0, 1, 1],
-          [1, 0, 1, 1],
-          [0, 1, 1, 1],
-          [0, 1, 1, 1],
-          [0, 1, 1, 1],
-          [0, 1, 1, 1]
-        ].flat()
-      );
-      this.vertexTexCoords = new Float32Array(
-        [
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [0, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [1, 0],
-          [1, 1],
-          [0, 1],
-          [0, 0],
-          [1, 0]
-        ].flat()
-      );
-      this.triangleIndices = new Uint8Array(
-        [
-          [0, 1, 2],
-          [0, 2, 3],
-          [4, 5, 6],
-          [4, 6, 7],
-          [8, 9, 10],
-          [8, 10, 11],
-          [12, 13, 14],
-          [12, 14, 15],
-          [16, 17, 18],
-          [16, 18, 19],
-          [20, 21, 22],
-          [20, 22, 23]
-        ].flat()
-      );
-      this.vertexPositions = new Float32Array(
-        [
-          [x, y, z],
-          [-x, y, z],
-          [-x, -y, z],
-          [x, -y, z],
-          [x, y, z],
-          [x, -y, z],
-          [x, -y, -z],
-          [x, y, -z],
-          [x, y, z],
-          [x, y, -z],
-          [-x, y, -z],
-          [-x, y, z],
-          [-x, y, z],
-          [-x, y, -z],
-          [-x, -y, -z],
-          [-x, -y, z],
-          [-x, -y, -z],
-          [x, -y, -z],
-          [x, -y, z],
-          [-x, -y, z],
-          [x, -y, -z],
-          [-x, -y, -z],
-          [-x, y, -z],
-          [x, y, -z]
-        ].flat()
-      );
-    }
-  };
-
   // white-dwarf/src/Core/Render/DataComponent/MeshGenerator/CubeMeshGeneratorData.ts
   var CubeMeshGeneratorData = class extends Component {
     constructor() {
@@ -5914,6 +5730,64 @@
     IComponent.register
   ], CubeMeshGeneratorData);
 
+  // white-dwarf/src/Core/Render/Mesh.ts
+  var Mesh = class {
+    constructor() {
+      this.vertexPositionBuffer = [];
+      this.vertexNormalBuffer = [];
+      this.vertexColorBuffer = [];
+      this.vertexTexCoordsBuffer = [];
+      this.triangleIndexBuffer = [];
+    }
+    compileBufferToArrays() {
+      this.vertexPositions = new Float32Array(this.vertexPositionBuffer);
+      this.vertexNormals = new Float32Array(this.vertexNormalBuffer);
+      this.vertexColors = new Float32Array(this.vertexColorBuffer);
+      this.vertexTexCoords = new Float32Array(this.vertexTexCoordsBuffer);
+      this.triangleIndices = new Uint8Array(this.triangleIndexBuffer);
+      this.clearBuffers();
+    }
+    clearBuffers() {
+      this.vertexPositionBuffer = [];
+      this.vertexNormalBuffer = [];
+      this.vertexColorBuffer = [];
+      this.vertexTexCoordsBuffer = [];
+      this.triangleIndexBuffer = [];
+    }
+    addVertexPosition(vertex) {
+      this.vertexPositionBuffer.push(vertex[0], vertex[1], vertex[2]);
+    }
+    addVertexNormal(normal) {
+      this.vertexNormalBuffer.push(normal[0], normal[1], normal[2]);
+    }
+    addVertexColor(color) {
+      this.vertexColorBuffer.push(color[0], color[1], color[2], color[3]);
+    }
+    addVertexTexCoords(texCoords) {
+      this.vertexTexCoordsBuffer.push(texCoords[0], texCoords[1]);
+    }
+    registerTriangle(t1, t2, t3) {
+      this.triangleIndexBuffer.push(t1, t2, t3);
+    }
+    copy(m) {
+      this.vertexPositions = new Float32Array(m.vertexPositions);
+      this.vertexNormals = new Float32Array(m.vertexNormals);
+      this.vertexColors = new Float32Array(m.vertexColors);
+      this.vertexTexCoords = new Float32Array(m.vertexTexCoords);
+      this.triangleIndices = new Uint8Array(m.triangleIndices);
+      return this;
+    }
+    clone() {
+      return new Mesh().copy(this);
+    }
+  };
+  var MeshType = createType({
+    name: "Mesh",
+    default: new Mesh(),
+    copy: copyCopyable,
+    clone: cloneClonable
+  });
+
   // white-dwarf/src/Core/Render/System/MeshGeneratorSystems/CubeMeshGeneratorSystem.ts
   var CubeMeshGeneratorSystem = class extends System {
     init(attributes) {
@@ -5941,19 +5815,401 @@
       if (!meshGeneratorData) {
         return;
       }
-      meshRenderData.mesh = new CubeMesh(
-        meshGeneratorData.size.value[0],
-        meshGeneratorData.size.value[1],
-        meshGeneratorData.size.value[2]
-      );
+      meshRenderData.mesh = new Mesh();
+      meshRenderData.mesh.clearBuffers();
+      const x = meshGeneratorData.size.value[0];
+      const y = meshGeneratorData.size.value[1];
+      const z = meshGeneratorData.size.value[2];
+      meshRenderData.mesh.addVertexPosition([-x, -y, z]);
+      meshRenderData.mesh.addVertexPosition([x, -y, z]);
+      meshRenderData.mesh.addVertexPosition([x, y, z]);
+      meshRenderData.mesh.addVertexPosition([-x, y, z]);
+      meshRenderData.mesh.addVertexNormal([0, 0, 1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, 1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, 1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, 1]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.registerTriangle(0, 1, 2);
+      meshRenderData.mesh.registerTriangle(0, 2, 3);
+      meshRenderData.mesh.addVertexPosition([-x, -y, -z]);
+      meshRenderData.mesh.addVertexPosition([-x, y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, -y, -z]);
+      meshRenderData.mesh.addVertexNormal([0, 0, -1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, -1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, -1]);
+      meshRenderData.mesh.addVertexNormal([0, 0, -1]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.registerTriangle(4, 5, 6);
+      meshRenderData.mesh.registerTriangle(4, 6, 7);
+      meshRenderData.mesh.addVertexPosition([-x, y, -z]);
+      meshRenderData.mesh.addVertexPosition([-x, y, z]);
+      meshRenderData.mesh.addVertexPosition([x, y, z]);
+      meshRenderData.mesh.addVertexPosition([x, y, -z]);
+      meshRenderData.mesh.addVertexNormal([0, 1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, 1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, 1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, 1, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.registerTriangle(8, 9, 10);
+      meshRenderData.mesh.registerTriangle(8, 10, 11);
+      meshRenderData.mesh.addVertexPosition([-x, -y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, -y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, -y, z]);
+      meshRenderData.mesh.addVertexPosition([-x, -y, z]);
+      meshRenderData.mesh.addVertexNormal([0, -1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, -1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, -1, 0]);
+      meshRenderData.mesh.addVertexNormal([0, -1, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.registerTriangle(12, 13, 14);
+      meshRenderData.mesh.registerTriangle(12, 14, 15);
+      meshRenderData.mesh.addVertexPosition([x, -y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, y, -z]);
+      meshRenderData.mesh.addVertexPosition([x, y, z]);
+      meshRenderData.mesh.addVertexPosition([x, -y, z]);
+      meshRenderData.mesh.addVertexNormal([1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([1, 0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.registerTriangle(16, 17, 18);
+      meshRenderData.mesh.registerTriangle(16, 18, 19);
+      meshRenderData.mesh.addVertexPosition([-x, -y, -z]);
+      meshRenderData.mesh.addVertexPosition([-x, -y, z]);
+      meshRenderData.mesh.addVertexPosition([-x, y, z]);
+      meshRenderData.mesh.addVertexPosition([-x, y, -z]);
+      meshRenderData.mesh.addVertexNormal([-1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([-1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([-1, 0, 0]);
+      meshRenderData.mesh.addVertexNormal([-1, 0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([0, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 0]);
+      meshRenderData.mesh.addVertexTexCoords([1, 1]);
+      meshRenderData.mesh.addVertexTexCoords([0, 1]);
+      meshRenderData.mesh.registerTriangle(20, 21, 22);
+      meshRenderData.mesh.registerTriangle(20, 22, 23);
+      meshRenderData.mesh.compileBufferToArrays();
     }
   };
   CubeMeshGeneratorSystem.queries = {
     meshEntities: {
       components: [CubeMeshGeneratorData, MeshRenderData3D],
       listen: {
-        added: true,
-        changed: true
+        added: true
+      }
+    }
+  };
+
+  // white-dwarf/src/Core/Render/DataComponent/MeshGenerator/IcosphereMeshGeneratorData.ts
+  var IcosphereMeshGeneratorData = class extends Component {
+    constructor() {
+      super(...arguments);
+      this.radius = 1;
+      this.subdivisions = 0;
+      this.flatNormal = false;
+    }
+  };
+  IcosphereMeshGeneratorData.schema = {
+    radius: {
+      type: Types.Number,
+      default: 1
+    },
+    subdivisions: {
+      type: Types.Number,
+      default: 0
+    },
+    flatNormal: {
+      type: Types.Boolean,
+      default: false
+    }
+  };
+  IcosphereMeshGeneratorData = __decorateClass([
+    IComponent.register
+  ], IcosphereMeshGeneratorData);
+
+  // white-dwarf/src/Core/Render/System/MeshGeneratorSystems/IcosphereMeshGeneratorSystem.ts
+  var IcosphereMeshGeneratorSystem = class extends System {
+    init(attributes) {
+      this.mainCanvas = attributes == null ? void 0 : attributes.mainCanvas;
+      this.canvasContext = this.mainCanvas.getContext(
+        "webgl"
+      );
+    }
+    execute(delta, time) {
+      var _a, _b;
+      (_a = this.queries.meshEntities.added) == null ? void 0 : _a.forEach((entity) => {
+        this.generateIcosphereMesh(entity);
+      });
+      (_b = this.queries.meshEntities.changed) == null ? void 0 : _b.forEach((entity) => {
+        this.generateIcosphereMesh(entity);
+      });
+    }
+    generateIcosphereMesh(entity) {
+      const generatorData = entity.getComponent(
+        IcosphereMeshGeneratorData
+      );
+      const meshRenderData = entity.getMutableComponent(
+        MeshRenderData3D
+      );
+      if (!meshRenderData) {
+        return;
+      }
+      meshRenderData.mesh = new Mesh();
+      this.generateIcosahedron(generatorData, meshRenderData);
+      for (let i = 0; i < generatorData.subdivisions; i++) {
+        this.subdivide(meshRenderData, generatorData);
+      }
+      meshRenderData.mesh.compileBufferToArrays();
+    }
+    subdivide(meshRenderData, generatorData) {
+      const vertices = meshRenderData.mesh.vertexPositionBuffer;
+      meshRenderData.mesh.clearBuffers();
+      let vertexIndex = 0;
+      while (vertices.length > 0) {
+        const v1 = vec3_exports.fromValues(
+          vertices.shift(),
+          vertices.shift(),
+          vertices.shift()
+        );
+        const v2 = vec3_exports.fromValues(
+          vertices.shift(),
+          vertices.shift(),
+          vertices.shift()
+        );
+        const v3 = vec3_exports.fromValues(
+          vertices.shift(),
+          vertices.shift(),
+          vertices.shift()
+        );
+        const v12 = vec3_exports.lerp(vec3_exports.create(), v1, v2, 0.5);
+        const v23 = vec3_exports.lerp(vec3_exports.create(), v2, v3, 0.5);
+        const v31 = vec3_exports.lerp(vec3_exports.create(), v3, v1, 0.5);
+        vec3_exports.normalize(v12, v12);
+        vec3_exports.normalize(v23, v23);
+        vec3_exports.normalize(v31, v31);
+        vec3_exports.scale(v12, v12, generatorData.radius);
+        vec3_exports.scale(v23, v23, generatorData.radius);
+        vec3_exports.scale(v31, v31, generatorData.radius);
+        meshRenderData.mesh.addVertexPosition(v1);
+        meshRenderData.mesh.addVertexPosition(v12);
+        meshRenderData.mesh.addVertexPosition(v31);
+        meshRenderData.mesh.addVertexPosition(v2);
+        meshRenderData.mesh.addVertexPosition(v23);
+        meshRenderData.mesh.addVertexPosition(v12);
+        meshRenderData.mesh.addVertexPosition(v3);
+        meshRenderData.mesh.addVertexPosition(v31);
+        meshRenderData.mesh.addVertexPosition(v23);
+        meshRenderData.mesh.addVertexPosition(v12);
+        meshRenderData.mesh.addVertexPosition(v23);
+        meshRenderData.mesh.addVertexPosition(v31);
+        if (generatorData.flatNormal) {
+          for (let i = 0; i < 3; i++) {
+            meshRenderData.mesh.addVertexNormal(this.calcNormal(v1, v12, v31));
+          }
+          for (let i = 0; i < 3; i++) {
+            meshRenderData.mesh.addVertexNormal(this.calcNormal(v2, v23, v12));
+          }
+          for (let i = 0; i < 3; i++) {
+            meshRenderData.mesh.addVertexNormal(this.calcNormal(v3, v31, v23));
+          }
+          for (let i = 0; i < 3; i++) {
+            meshRenderData.mesh.addVertexNormal(this.calcNormal(v12, v23, v31));
+          }
+        } else {
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v1));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v12));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v31));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v2));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v23));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v12));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v3));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v31));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v23));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v12));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v23));
+          meshRenderData.mesh.addVertexNormal(vec3_exports.normalize(vec3_exports.create(), v31));
+        }
+        for (let i = 0; i < 4; i++) {
+          meshRenderData.mesh.registerTriangle(
+            vertexIndex,
+            vertexIndex + 1,
+            vertexIndex + 2
+          );
+          vertexIndex += 3;
+        }
+      }
+    }
+    generateIcosahedron(generatorData, meshRenderData) {
+      const layerRadius = generatorData.radius * 2 / Math.sqrt(5);
+      const layerHeight = generatorData.radius / Math.sqrt(5);
+      const topVertex = vec3_exports.fromValues(0, generatorData.radius, 0);
+      const topVertices = [];
+      for (let i = 0; i < 5; i++) {
+        const angle3 = i * 2 * Math.PI / 5;
+        const z = layerRadius * Math.cos(angle3);
+        const x = -layerRadius * Math.sin(angle3);
+        topVertices.push(vec3_exports.fromValues(x, layerHeight, z));
+      }
+      const bottomVertices = [];
+      for (let i = 0; i < 5; i++) {
+        const angle3 = i * 2 * Math.PI / 5;
+        const z = layerRadius * Math.cos(angle3 + Math.PI);
+        const x = -layerRadius * Math.sin(angle3 + Math.PI);
+        bottomVertices.push(vec3_exports.fromValues(x, -layerHeight, z));
+      }
+      const bottomVertex = vec3_exports.fromValues(0, -generatorData.radius, 0);
+      let verticesCount = 0;
+      for (let i = 0; i < 5; i++) {
+        meshRenderData.mesh.addVertexPosition(topVertex);
+        meshRenderData.mesh.addVertexPosition(topVertices[i]);
+        meshRenderData.mesh.addVertexPosition(topVertices[(i + 1) % 5]);
+        if (generatorData.flatNormal) {
+          const flatNormal = this.calcNormal(
+            topVertex,
+            topVertices[i],
+            topVertices[(i + 1) % 5]
+          );
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+        } else {
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertices[i])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertex)
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertices[(i + 1) % 5])
+          );
+        }
+        meshRenderData.mesh.registerTriangle(
+          verticesCount,
+          verticesCount + 1,
+          verticesCount + 2
+        );
+        verticesCount += 3;
+      }
+      for (let i = 0; i < 5; i++) {
+        meshRenderData.mesh.addVertexPosition(topVertices[i]);
+        meshRenderData.mesh.addVertexPosition(bottomVertices[(i + 2) % 5]);
+        meshRenderData.mesh.addVertexPosition(bottomVertices[(i + 3) % 5]);
+        meshRenderData.mesh.addVertexPosition(bottomVertices[(i + 3) % 5]);
+        meshRenderData.mesh.addVertexPosition(topVertices[(i + 1) % 5]);
+        meshRenderData.mesh.addVertexPosition(topVertices[i]);
+        if (generatorData.flatNormal) {
+          const flatNormal1 = this.calcNormal(
+            topVertices[i],
+            bottomVertices[(i + 2) % 5],
+            bottomVertices[(i + 3) % 5]
+          );
+          const flatNormal2 = this.calcNormal(
+            bottomVertices[(i + 3) % 5],
+            topVertices[(i + 1) % 5],
+            topVertices[i]
+          );
+          meshRenderData.mesh.addVertexNormal(flatNormal1);
+          meshRenderData.mesh.addVertexNormal(flatNormal1);
+          meshRenderData.mesh.addVertexNormal(flatNormal1);
+          meshRenderData.mesh.addVertexNormal(flatNormal2);
+          meshRenderData.mesh.addVertexNormal(flatNormal2);
+          meshRenderData.mesh.addVertexNormal(flatNormal2);
+        } else {
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertices[i])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertices[(i + 2) % 5])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertices[(i + 3) % 5])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertices[(i + 3) % 5])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertices[(i + 1) % 5])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), topVertices[i])
+          );
+        }
+        meshRenderData.mesh.registerTriangle(
+          verticesCount,
+          verticesCount + 1,
+          verticesCount + 2
+        );
+        meshRenderData.mesh.registerTriangle(
+          verticesCount + 3,
+          verticesCount + 4,
+          verticesCount + 5
+        );
+        verticesCount += 6;
+      }
+      for (let i = 0; i < 5; i++) {
+        meshRenderData.mesh.addVertexPosition(bottomVertex);
+        meshRenderData.mesh.addVertexPosition(bottomVertices[(i + 1) % 5]);
+        meshRenderData.mesh.addVertexPosition(bottomVertices[i]);
+        if (generatorData.flatNormal) {
+          const flatNormal = this.calcNormal(
+            bottomVertex,
+            bottomVertices[(i + 1) % 5],
+            bottomVertices[i]
+          );
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+          meshRenderData.mesh.addVertexNormal(flatNormal);
+        } else {
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertices[i])
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertex)
+          );
+          meshRenderData.mesh.addVertexNormal(
+            vec3_exports.normalize(vec3_exports.create(), bottomVertices[(i + 1) % 5])
+          );
+        }
+        meshRenderData.mesh.registerTriangle(
+          verticesCount,
+          verticesCount + 1,
+          verticesCount + 2
+        );
+        verticesCount += 3;
+      }
+    }
+    calcNormal(v1, v2, v3) {
+      const normal = vec3_exports.create();
+      vec3_exports.cross(
+        normal,
+        vec3_exports.sub(vec3_exports.create(), v3, v1),
+        vec3_exports.sub(vec3_exports.create(), v2, v1)
+      );
+      vec3_exports.normalize(normal, normal);
+      return normal;
+    }
+  };
+  IcosphereMeshGeneratorSystem.queries = {
+    meshEntities: {
+      components: [IcosphereMeshGeneratorData, MeshRenderData3D],
+      listen: {
+        added: true
       }
     }
   };
@@ -6067,6 +6323,9 @@
       const meshRenderData = entity.getMutableComponent(
         MeshRenderData3D
       );
+      if (!meshRenderData.mesh) {
+        return;
+      }
       try {
         meshRenderData.material = new Material(
           this.canvasContext,
@@ -6104,6 +6363,8 @@
     constructor(mainCanvas) {
       this.register = (world) => {
         world.registerSystem(CubeMeshGeneratorSystem, {
+          mainCanvas: this.mainCanvas
+        }).registerSystem(IcosphereMeshGeneratorSystem, {
           mainCanvas: this.mainCanvas
         }).registerSystem(WebGLMeshCompiler, {
           mainCanvas: this.mainCanvas
@@ -6933,8 +7194,10 @@
       const mat = new MaterialDescriptor(default_vert_default, default_frag_default);
       mainWorld.createEntity("WebGL Render Target").addComponent(TransformData3D, {
         position: new Vector3(0, 0, 0)
-      }).addComponent(CubeMeshGeneratorData, {
-        size: new Vector3(1, 1, 1)
+      }).addComponent(IcosphereMeshGeneratorData, {
+        radius: 2,
+        subdivisions: 1,
+        flatNormal: true
       }).addComponent(MeshRenderData3D, {
         materialDesc: mat
       });
