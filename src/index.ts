@@ -83,30 +83,30 @@ export const main = () => {
       );
     }
 
-    // // Add a runtime cam.
-    // mainWorld
-    //   .createEntity("Runtime Main Camera")
-    //   .addComponent(TransformData3D, {
-    //     position: new Vector3(0, 0, -10),
-    //   })
-    //   .addComponent(PerspectiveCameraData3D, {
-    //     fov: Math.PI / 2,
-    //   })
-    //   .addComponent(MainCameraInitTag);
+    // Add a runtime cam.
+    mainWorld
+      .createEntity("Runtime Main Camera")
+      .addComponent(TransformData3D, {
+        position: new Vector3(0, 0, -10),
+      })
+      .addComponent(PerspectiveCameraData3D, {
+        fov: Math.PI / 2,
+      })
+      .addComponent(MainCameraInitTag);
 
-    // // Add a entity with mesh render data.
-    // const mat = new MaterialDescriptor(default_vert, default_frag);
-    // mainWorld
-    //   .createEntity("WebGL Render Target")
-    //   .addComponent(TransformData3D, {
-    //     position: new Vector3(0, 0, 0),
-    //   })
-    //   .addComponent(CubeMeshGeneratorData, {
-    //     size: new Vector3(1, 1, 1),
-    //   })
-    //   .addComponent(MeshRenderData3D, {
-    //     materialDesc: mat,
-    //   });
+    // Add a entity with mesh render data.
+    const mat = new MaterialDescriptor(default_vert, default_frag);
+    mainWorld
+      .createEntity("WebGL Render Target")
+      .addComponent(TransformData3D, {
+        position: new Vector3(0, 0, 0),
+      })
+      .addComponent(CubeMeshGeneratorData, {
+        size: new Vector3(1, 1, 1),
+      })
+      .addComponent(MeshRenderData3D, {
+        materialDesc: mat,
+      });
 
     // Setup editor scene camera.
     try {
